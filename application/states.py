@@ -1,0 +1,49 @@
+from aiogram.fsm.state import StatesGroup, State
+
+
+class PasswordCheck(StatesGroup):
+    EnterPassword = State()
+
+
+class RegistrationState(StatesGroup):
+    EnterPhone = State()
+    EnterName = State()
+    EnterLastName = State()
+    ChoiceSpecialisation = State()
+    ChoiceIDTeacher = State()
+
+
+class UpdateRegistrationState(StatesGroup):
+    UpdateName = State()
+    UpdateLastName = State()
+    UpdatePhone = State()
+    UpdateIDTeacher = State()
+    UpdateChoiceSpecialisation = State()
+
+
+class HomeworkState(StatesGroup):
+    ChoiceTeacher = State()
+    ChoosingDZType = State()
+    WaitingForPhoto = State()
+    WaitingForVideo = State()
+    WaitingForTextAndLinks = State()
+
+
+class Newsletter(StatesGroup):
+    Text = State()
+
+
+class AdminVerification(StatesGroup):
+    Awaiting_password = State()
+
+
+class UpdateParts(StatesGroup):
+    UpdatePartsName = State()
+    UpdatePartsLastName = State()
+    UpdatePartsPhone = State()
+    UpdatePartsIDTeacher = State()
+    UpdatePartsChoiceSpecialisation = State()
+
+
+class Gifts(StatesGroup):
+    Gift = State()
