@@ -1,5 +1,5 @@
 from application.database.models import Teacher, Student, Administrator, Password, PointsHistory, StudentTeacher, \
-    MonetizationSystem, PointsExchange, async_session
+    MonetizationSystem, PointsExchange, SupportInfo, InfoBot, async_session
 from sqlalchemy import select, update, func, extract
 
 
@@ -18,6 +18,18 @@ async def get_money():
 async def get_gifts():
     async with async_session() as session:
         result = await session.scalars(select(PointsExchange))
+        return result
+
+
+async def get_info():
+    async with async_session() as session:
+        result = await session.scalars(select(InfoBot))
+        return result
+
+
+async def get_support():
+    async with async_session() as session:
+        result = await session.scalars(select(SupportInfo))
         return result
 
 

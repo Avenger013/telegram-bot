@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from application.states import Gifts
 from application.database.models import async_session
 from application.database.requests import get_student_info, get_top_students, get_leader_of_the_month, get_money, \
-    get_gifts, get_student, get_gift_by_id, update_student_points
+    get_gifts, get_student, get_gift_by_id, update_student_points, get_support, get_info
 
 import application.keyboard as kb
 
@@ -273,7 +273,7 @@ async def selecting_gifts(callback: CallbackQuery, state: FSMContext):
                     gifts_text = "Баллы были успешно списаны, вы получаете:\n" + "; ".join(gifts_descriptions) + "."
 
                 await callback.message.edit_text(
-                    text=gifts_text + "\nОбратитесь к администратору для получения.", reply_markup=kb.back3
+                    text=gifts_text + "\n\nОбратитесь к администратору для получения.", reply_markup=kb.back3
                 )
         else:
             await callback.message.answer("Профиль студента не найден.")
@@ -310,38 +310,44 @@ async def call_monetization_list(callback: CallbackQuery):
 @router.message(F.text == '✍🏼 Поддержка')
 @router.message(Command('support'))
 async def support_service(message: Message):
-    await message.answer(
-        text='✍🏼 <b>Служба поддержки</b>\n\n'
-             'Если у вас возникли какие-либо проблемы, то пишите в нашу службу поддержки @RustamRafiev 🤝🏼.',
-        reply_markup=kb.back3, parse_mode='HTML'
-    )
+    support_info = await get_support()
+    response_text = "✍🏼 <b>Служба поддержки</b>\n\n"
+
+    for info in support_info:
+        response_text += f"{info.instruction_support} 🤝🏼.\n"
+
+    await message.answer(text=response_text, reply_markup=kb.back3, parse_mode='HTML')
 
 
 @router.callback_query(F.data.startswith('supp'))
 async def call_support_service(callback: CallbackQuery):
-    await callback.message.edit_text(
-        text='✍🏼 <b>Служба поддержки</b>\n'
-             '\nЕсли у вас возникли какие-либо проблемы, то пишите в нашу службу поддержки @RustamRafiev 🤝🏼.',
-        reply_markup=kb.back2, parse_mode='HTML'
-    )
+    support_info = await get_support()
+    response_text = "✍🏼 <b>Служба поддержки</b>\n\n"
+
+    for info in support_info:
+        response_text += f"{info.instruction_support} 🤝🏼.\n"
+
+    await callback.message.edit_text(text=response_text, reply_markup=kb.back2, parse_mode='HTML')
 
 
 @router.message(F.text == '❔ О боте')
 @router.message(Command('info'))
 async def information_bot(message: Message):
-    await message.answer(
-        text='❔ <b>Информация о боте</b>\n\n'
-             'Здесь собрана информация о часто задаваемых вопросах.\n'
-             '\nЕсли вы не нашли нужную вам информацию, то пишите в нашу службу поддержки @RustamRafiev .',
-        reply_markup=kb.back3, parse_mode='HTML'
-    )
+    bot_info = await get_info()
+    response_text = "❔ <b>Информация о боте</b>\n\n"
+
+    for info in bot_info:
+        response_text += f"{info.instruction}\n\n"
+
+    await message.answer(text=response_text, reply_markup=kb.back3, parse_mode='HTML')
 
 
 @router.callback_query(F.data.startswith('the_info'))
 async def call_information_bot(callback: CallbackQuery):
-    await callback.message.edit_text(
-        text='❔ <b>Информация о боте</b>\n'
-             '\nЗдесь собрана информация о часто задаваемых вопросах.\n'
-             '\nЕсли вы не нашли нужную вам информацию, то пишите в нашу службу поддержки @RustamRafiev .',
-        reply_markup=kb.back2, parse_mode='HTML'
-    )
+    bot_info = await get_info()
+    response_text = "❔ <b>Информация о боте</b>\n\n"
+
+    for info in bot_info:
+        response_text += f"{info.instruction}\n\n"
+
+    await callback.message.edit_text(text=response_text, reply_markup=kb.back2, parse_mode='HTML')
