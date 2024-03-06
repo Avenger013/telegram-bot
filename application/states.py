@@ -47,3 +47,7 @@ class UpdateParts(StatesGroup):
 
 class Gifts(StatesGroup):
     Gift = State()
+
+
+class Systems(StatesGroup):
+    System = State()

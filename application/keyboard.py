@@ -1,17 +1,27 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton, InlineKeyboardMarkup
-from application.database.requests import get_teachers, get_teachers_vocal, get_teachers_guitar, get_gifts
-
-main = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='🎒 Ученик')],
-    [KeyboardButton(text='🎓 Преподаватель')]
-], resize_keyboard=True, one_time_keyboard=True)
+from application.database.requests import get_teachers, get_teachers_vocal, get_teachers_guitar, get_gifts, get_money
 
 registration = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(
                 text='Регистрация',
                 callback_data='registration'
+            )
+        ]
+])
+
+registration1 = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Регистрация',
+                callback_data='registration'
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Отмена',
+                callback_data='cancellation'
             )
         ]
 ])
@@ -145,14 +155,21 @@ confirmation_text = InlineKeyboardMarkup(inline_keyboard=[
         ]
 ])
 
+# menu = ReplyKeyboardMarkup(keyboard=[
+#     [KeyboardButton(text='🔐 Личный кабинет')],
+#     [KeyboardButton(text='✉️ Отправка ДЗ')],
+#     [KeyboardButton(text='📊 ТОП учеников')],
+#     [KeyboardButton(text='📈 Лидер месяца')],
+#     [KeyboardButton(text='🎁 Монетизация')],
+#     [KeyboardButton(text='✍🏼 Поддержка')],
+#     [KeyboardButton(text='❔ О боте')]
+# ], resize_keyboard=True, one_time_keyboard=True)
+
 menu = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='🔐 Личный кабинет')],
-    [KeyboardButton(text='✉️ Отправка ДЗ')],
-    [KeyboardButton(text='📊 ТОП учеников')],
-    [KeyboardButton(text='📈 Лидер месяца')],
-    [KeyboardButton(text='🎁 Монетизация')],
-    [KeyboardButton(text='✍🏼 Поддержка')],
-    [KeyboardButton(text='❔ О боте')]
+    [
+        KeyboardButton(text='🔐 Личный кабинет'),
+        KeyboardButton(text='🎁 Монетизация')
+    ]
 ], resize_keyboard=True, one_time_keyboard=True)
 
 menu1 = ReplyKeyboardMarkup(keyboard=[
@@ -364,7 +381,7 @@ async def teachers_choice_students_da(selected_ids=[]):
         status_emoji = "✅" if teacher.id in selected_ids else ""
         full_name = f"{status_emoji} {teacher.name} {teacher.last_name}"
         teachers_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'select_teacher_{teacher.id}'))
-    teachers_choice_kb.add(InlineKeyboardButton(text="Подтвердить выбор", callback_data='done_selecting_teachers'))
+    teachers_choice_kb.add(InlineKeyboardButton(text="🎯Подтвердить выбор", callback_data='done_selecting_teachers'))
     return teachers_choice_kb.adjust(2).as_markup()
 
 
@@ -375,7 +392,7 @@ async def teachers_choice_students_da_v(selected_ids=[]):
         status_emoji = "✅" if teacher.id in selected_ids else ""
         full_name = f"{status_emoji} {teacher.name} {teacher.last_name}"
         teachers_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'1select_teacher_{teacher.id}'))
-    teachers_choice_kb.add(InlineKeyboardButton(text="Подтвердить выбор", callback_data='done_selecting_teachers'))
+    teachers_choice_kb.add(InlineKeyboardButton(text="🎯Подтвердить выбор", callback_data='done_selecting_teachers'))
     return teachers_choice_kb.adjust(1).as_markup()
 
 
@@ -386,7 +403,7 @@ async def teachers_choice_students_da_g(selected_ids=[]):
         status_emoji = "✅" if teacher.id in selected_ids else ""
         full_name = f"{status_emoji} {teacher.name} {teacher.last_name}"
         teachers_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'2select_teacher_{teacher.id}'))
-    teachers_choice_kb.add(InlineKeyboardButton(text="Подтвердить выбор", callback_data='done_selecting_teachers'))
+    teachers_choice_kb.add(InlineKeyboardButton(text="🎯Подтвердить выбор", callback_data='done_selecting_teachers'))
     return teachers_choice_kb.adjust(1).as_markup()
 
 
@@ -396,5 +413,15 @@ async def choosing_a_gift(selected_ids=[]):
     for PointsExchanges in choosing_a_gift:
         status_emoji = "✅" if PointsExchanges.id in selected_ids else ""
         choosing_a_gift_kb.add(InlineKeyboardButton(text=f"{status_emoji} {PointsExchanges.present}", callback_data=f'gifts_{PointsExchanges.id}'))
-    choosing_a_gift_kb.add(InlineKeyboardButton(text="Подтвердить выбор", callback_data='selecting_gifts'))
+    choosing_a_gift_kb.add(InlineKeyboardButton(text="🎯Подтвердить выбор", callback_data='selecting_gifts'))
     return choosing_a_gift_kb.adjust(1).as_markup()
+
+
+async def choosing_a_money(selected_ids=[]):
+    choosing_a_money_kb = InlineKeyboardBuilder()
+    choosing_a_money = await get_money()
+    for MonetizationSystem in choosing_a_money:
+        status_emoji = "✅" if MonetizationSystem.id in selected_ids else ""
+        choosing_a_money_kb.add(InlineKeyboardButton(text=f"{status_emoji} {MonetizationSystem.task} {MonetizationSystem.number_of_points}", callback_data=f'monetization_{MonetizationSystem.id}'))
+    choosing_a_money_kb.add(InlineKeyboardButton(text="🎯Подтвердить выбор", callback_data='selecting_gifts'))
+    return choosing_a_money_kb.adjust(1).as_markup()

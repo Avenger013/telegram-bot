@@ -25,16 +25,16 @@ async def set_commands(bot: Bot):
             description='Монетизация',
         ),
         BotCommand(
-            command='info',
-            description='Информация о боте',
-        ),
-        BotCommand(
             command='support',
             description='Поддержка',
         ),
         BotCommand(
-            command='registration',
-            description='Регистрация ученика',
+            command='info',
+            description='Информация о боте',
+        ),
+        BotCommand(
+            command='teacher',
+            description='Зайти как преподаватель',
         ),
         BotCommand(
             command='start',

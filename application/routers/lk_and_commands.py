@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from application.states import Gifts
+from application.states import Gifts, Systems
 from application.database.models import async_session
 from application.database.requests import get_student_info, get_top_students, get_leader_of_the_month, get_money, \
     get_gifts, get_student, get_gift_by_id, update_student_points, get_support, get_info
@@ -50,9 +50,7 @@ async def personal_area(message: Message):
             await message.answer(text='', reply_markup=kb.menu)
         else:
             await message.answer(
-                text='''
-                Вы не зарегистрированы. Пожалуйста, зарегистрируйтесь с помощью /registration или по кнопке ниже.
-                ''',
+                text=f'{message.from_user.first_name}, это ваш первый вход. \nПожалуйста, пройдите быструю регистрацию.',
                 reply_markup=kb.registration
             )
 
@@ -90,11 +88,9 @@ async def call_back(callback: CallbackQuery):
             await callback.message.edit_text(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area)
             await callback.message.answer(text='', reply_markup=kb.menu)
         else:
-            await callback.message.answer(
-                text='''
-                Вы не зарегистрированы. Пожалуйста, зарегистрируйтесь с помощью /registration или по кнопке ниже.
-                ''',
-                reply_markup=kb.registration
+            await callback.message.edit_text(
+                text=f'{callback.from_user.first_name}, это ваш первый вход. \nПожалуйста, пройдите быструю регистрацию.',
+                reply_markup=kb.registration1
             )
 
 
@@ -351,3 +347,12 @@ async def call_information_bot(callback: CallbackQuery):
         response_text += f"{info.instruction}\n\n"
 
     await callback.message.edit_text(text=response_text, reply_markup=kb.back2, parse_mode='HTML')
+
+
+@router.callback_query(F.data.startswith('receiving'))
+async def getting_points(callback: CallbackQuery, state: FSMContext):
+    new_markup = await kb.choosing_a_money()
+    await callback.message.edit_text(
+        text="Выберите то, что вы сделали, мы уведомим администратора и после проверки вам начисляться баллы (можно выбрать 1 или несколько):",
+        reply_markup=new_markup)
+    await state.set_state(Systems.System)

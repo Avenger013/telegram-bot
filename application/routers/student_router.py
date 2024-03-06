@@ -15,27 +15,6 @@ import application.keyboard as kb
 router = Router(name=__name__)
 
 
-@router.message(F.text == '🎒 Ученик')
-async def choice_of_directional(message: Message, state: FSMContext):
-    await register_student(message, state)
-
-
-async def register_student(message: Message, state: FSMContext):
-    tg_id = message.from_user.id
-    async with async_session() as session:
-        student = await get_student(session, tg_id)
-        if student:
-            await message.answer(
-                text='😁Вы уже зарегистрированы. \nПожалуйста, нажмите на одну из представленных ниже кнопок.',
-                reply_markup=kb.menu
-            )
-        else:
-            await message.answer(
-                text=f'{message.from_user.first_name}, вы вошли под ролью ученика в первый раз. \nПожалуйста, пройдите быструю регистрацию.',
-                reply_markup=kb.registration
-            )
-
-
 @router.callback_query(F.data.startswith('registration'))
 async def register_students(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(text='Введите ваш номер телефона (без +7 или 8 в начале):')

@@ -3,6 +3,8 @@ import glob
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.fsm.context import FSMContext
+from aiogram.types import ReplyKeyboardRemove
+from aiogram.filters import Command
 
 from application.states import PasswordCheck
 from application.database.requests import get_teacher_password
@@ -12,14 +14,23 @@ import application.keyboard as kb
 router = Router(name=__name__)
 
 
-@router.message(F.text == '🎓 Преподаватель')
-async def enter_password(message: Message, state: FSMContext):
-    await message.answer(text='Введите пароль:')
+@router.message(Command('teacher'))
+async def register_students(message: Message, state: FSMContext):
+    await message.answer(text='Введите пароль:',  reply_markup=ReplyKeyboardRemove())
     await state.set_state(PasswordCheck.EnterPassword)
 
 
 @router.message(PasswordCheck.EnterPassword)
 async def check_password(message: Message, state: FSMContext):
+    commands = ['/profile', '/homework', '/top', '/leader', '/monetization', '/info', '/support', '/registration',
+                '/start', '/newsletter']
+    input_text = message.text
+
+    if input_text in commands:
+        await state.clear()
+        await message.answer("Обнаружена команда. Пожалуйста, введите команду ещё раз.")
+        return
+
     input_password = message.text
     teacher_password = await get_teacher_password()
     if input_password == teacher_password:

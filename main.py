@@ -8,6 +8,7 @@ from application.database.models import async_main
 from config import TOKEN
 from application.routers import router as main_router
 from application.utils.commands import set_commands
+from application.middleware import ResetStateMiddleware
 
 
 async def main():
@@ -15,6 +16,7 @@ async def main():
 
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
+    dp.message.middleware.register(ResetStateMiddleware())
     dp.include_router(main_router)
 
     await set_commands(bot)

@@ -11,6 +11,7 @@ from aiogram.exceptions import TelegramBadRequest
 
 from application.states import HomeworkState
 from application.database.models import Student, async_session
+from application.database.requests import get_student
 
 import application.keyboard as kb
 
@@ -20,9 +21,20 @@ router = Router(name=__name__)
 @router.message(F.text == '✉️ Отправка ДЗ')
 @router.message(Command('homework'))
 async def submitting_homework(message: Message, state: FSMContext):
-    await message.answer(text='Выберите преподавателя, которому вы хотите отправить домашнее задание:',
-                         reply_markup=await kb.choice_teacher())
-    await state.set_state(HomeworkState.ChoiceTeacher)
+    tg_id = message.from_user.id
+    async with async_session() as session:
+        student = await get_student(session, tg_id)
+        if student:
+            await message.answer(
+                text='😁Вы уже зарегистрированы. \nПожалуйста, выберите преподавателя, которому вы хотите отправить домашнее задание:',
+                reply_markup=await kb.choice_teacher()
+            )
+            await state.set_state(HomeworkState.ChoiceTeacher)
+        else:
+            await message.answer(
+                text=f'{message.from_user.first_name}, это ваш первый вход. \nПожалуйста, пройдите быструю регистрацию.',
+                reply_markup=kb.registration
+            )
 
 
 @router.callback_query(F.data.startswith('send'))
