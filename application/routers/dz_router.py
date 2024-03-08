@@ -27,7 +27,7 @@ async def submitting_homework(message: Message, state: FSMContext):
         if student:
             await message.answer(
                 text='😁Вы уже зарегистрированы. \nПожалуйста, выберите преподавателя, которому вы хотите отправить домашнее задание:',
-                reply_markup=await kb.choice_teacher()
+                reply_markup=await kb.choice_teacher(tg_id)
             )
             await state.set_state(HomeworkState.ChoiceTeacher)
         else:
@@ -39,8 +39,9 @@ async def submitting_homework(message: Message, state: FSMContext):
 
 @router.callback_query(F.data.startswith('send'))
 async def call_submitting_homework(callback: CallbackQuery, state: FSMContext):
+    tg_id = callback.from_user.id
     await callback.message.edit_text(text='Выберите преподавателя, которому вы хотите отправить домашнее задание:',
-                                     reply_markup=await kb.choice_teacher())
+                                     reply_markup=await kb.choice_teacher(tg_id))
     await state.set_state(HomeworkState.ChoiceTeacher)
 
 

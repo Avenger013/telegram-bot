@@ -9,6 +9,14 @@ async def get_teachers():
         return result
 
 
+async def get_teachers1(student_id: int):
+    async with async_session() as session:
+        result = await session.scalars(
+            select(Teacher).join(StudentTeacher).where(StudentTeacher.student_id == student_id)
+        )
+        return result.all()
+
+
 async def get_money():
     async with async_session() as session:
         result = await session.scalars(select(MonetizationSystem))
