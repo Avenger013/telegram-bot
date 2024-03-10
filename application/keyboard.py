@@ -230,6 +230,60 @@ inline_keyboard_personal_area = InlineKeyboardMarkup(inline_keyboard=[
     ]
 ])
 
+inline_homework = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='📨Отправить выполненное ДЗ',
+            callback_data='dz_send'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='📆Отправить еженедельное задание',
+            callback_data='pass'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='📹Отправить видео с исполнением песни',
+            callback_data='pass1'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️Назад',
+            callback_data='back'
+        )
+    ]
+])
+
+inline_homework1 = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='📨Отправить выполненное ДЗ',
+            callback_data='dz_send'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='📆Отправить еженедельное задание',
+            callback_data='pass'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='📹Отправить видео с исполнением песни',
+            callback_data='pass1'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='🔐Перейти в личный кабинет',
+            callback_data='back'
+        )
+    ]
+])
+
 updating_in_parts = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(

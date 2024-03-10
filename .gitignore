@@ -162,5 +162,4 @@ cython_debug/
 .idea/
 
 application/media/
-application/handlers.py
 information.txt
