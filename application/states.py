@@ -37,10 +37,6 @@ class HomeworkState2(StatesGroup):
     WaitingForLinks2 = State()
 
 
-class MyStates(StatesGroup):
-    waiting_for_photo = State()
-
-
 class Newsletter(StatesGroup):
     Text = State()
 
