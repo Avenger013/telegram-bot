@@ -109,6 +109,12 @@ dz_type = InlineKeyboardMarkup(inline_keyboard=[
             text='Текст или ссылка',
             callback_data='t_l'
         )
+    ],
+    [
+        InlineKeyboardButton(
+            text='Голосовое',
+            callback_data='o_i'
+        )
     ]
 ])
 
@@ -153,6 +159,21 @@ confirmation_text = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(
             text='Хочу изменить',
             callback_data='xt_change'
+        )
+    ]
+])
+
+confirmation_voice = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='Всё верно',
+            callback_data='voi_confirm'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='Хочу изменить',
+            callback_data='ce_change'
         )
     ]
 ])

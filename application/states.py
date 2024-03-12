@@ -27,6 +27,7 @@ class HomeworkState(StatesGroup):
     WaitingForPhoto = State()
     WaitingForVideo = State()
     WaitingForTextAndLinks = State()
+    WaitingForVoice = State()
 
 
 class Newsletter(StatesGroup):

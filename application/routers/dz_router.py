@@ -25,7 +25,7 @@ async def submitting_homework(message: Message):
         student = await get_student(session, tg_id)
         if student:
             homework_text = (
-                "<b>✉️Отправка ДЗ</b>\n\n"
+                "<b>✉️ Отправка ДЗ</b>\n\n"
                 "Есть 3 варианта на выбор:\n\n"
                 "📨Отправить выполненное ДЗ\n"
                 "├ Данное домашнее задание назначил ваш преподаватель\n"
@@ -40,7 +40,7 @@ async def submitting_homework(message: Message):
                 "📹Отправить видео с полной версией песни в своем исполнении\n"
                 "├ Песню выбираете любую, по своему желанию\n"
                 "├ Можно отправлять максимум 2 раза в месяц\n"
-                "├ За выполнение вы получите <b>+2 балла</b>, после проверки преподавателем"
+                "├ За выполнение вы получите <b>+2 балла</b>, после просмотра преподавателем"
             )
             await message.answer(text=homework_text, parse_mode='HTML', reply_markup=kb.inline_homework1)
         else:
@@ -53,7 +53,7 @@ async def submitting_homework(message: Message):
 @router.callback_query(F.data.startswith('send'))
 async def call_submitting(callback: CallbackQuery):
     homework_text = (
-        "<b>✉️Отправка ДЗ</b>\n\n"
+        "<b>✉️ Отправка ДЗ</b>\n\n"
         "Есть 3 варианта на выбор:\n\n"
         "📨Отправить выполненное ДЗ\n"
         "├ Данное домашнее задание назначил ваш преподаватель\n"
@@ -68,7 +68,7 @@ async def call_submitting(callback: CallbackQuery):
         "📹Отправить видео с полной версией песни в своем исполнении\n"
         "├ Песню выбираете любую, по своему желанию\n"
         "├ Можно отправлять максимум 2 раза в месяц\n"
-        "├ За выполнение вы получите <b>+2 балла</b>, после проверки преподавателем"
+        "├ За выполнение вы получите <b>+2 балла</b>, после просмотра преподавателем"
     )
     await callback.message.edit_text(text=homework_text, parse_mode='HTML', reply_markup=kb.inline_homework)
 
@@ -91,20 +91,26 @@ async def teacher_selected_for_homework(callback: CallbackQuery, state: FSMConte
 
 @router.callback_query(F.data.startswith('p_p'), HomeworkState.ChoosingDZType)
 async def dz_type_photo(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Отлично, теперь пришлите фото вашего домашнего задания!')
+    await callback.message.edit_text('😁Отлично, теперь пришлите фото вашего домашнего задания!')
     await state.set_state(HomeworkState.WaitingForPhoto)
 
 
 @router.callback_query(F.data.startswith('v_v'), HomeworkState.ChoosingDZType)
 async def dz_type_video(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Отлично, теперь пришлите видео вашего домашнего задания!')
+    await callback.message.edit_text('😁Отлично, теперь пришлите видео вашего домашнего задания!')
     await state.set_state(HomeworkState.WaitingForVideo)
 
 
 @router.callback_query(F.data.startswith('t_l'), HomeworkState.ChoosingDZType)
 async def dz_type_text_link(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('Отлично, теперь напишите текст вашего домашнего задания или скиньте ссылку!')
+    await callback.message.edit_text('😁Отлично, теперь напишите текст вашего домашнего задания или скиньте ссылку!')
     await state.set_state(HomeworkState.WaitingForTextAndLinks)
+
+
+@router.callback_query(F.data.startswith('o_i'), HomeworkState.ChoosingDZType)
+async def dz_type_text_link(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text('😁Отлично, теперь запишите голосовое сообщение и отправьте в чат!')
+    await state.set_state(HomeworkState.WaitingForVoice)
 
 
 @router.message(F.photo, HomeworkState.WaitingForPhoto)
@@ -124,7 +130,7 @@ async def receive_homework_photo(message: Message, state: FSMContext):
     photo_id = message.photo[-1].file_id
 
     await state.update_data(photo_id=photo_id, student_id=student_id, teacher_id=teacher_id)
-    await message.answer(text="Всё верно? Окончательно отправить?", reply_markup=kb.confirmation)
+    await message.answer(text="🧐Всё верно? Окончательно отправить?", reply_markup=kb.confirmation)
 
 
 @router.callback_query(F.data.in_(['confirm', 'change']), HomeworkState.WaitingForPhoto)
@@ -156,10 +162,10 @@ async def confirm_homework_photo(callback: CallbackQuery, state: FSMContext, bot
         filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_photo.jpg"
 
         await bot.download_file(file_path, filename)
-        await callback.message.answer("Домашнее задание (фото) успешно отправлено!")
+        await callback.message.answer(text="✅Домашнее задание (фото) успешно отправлено!", reply_markup=kb.menu)
         await state.clear()
     elif call_data == 'change':
-        await callback.message.answer("Отлично, отправьте свое домашнее задание ещё раз.")
+        await callback.message.answer("😌Отлично, отправьте свое домашнее задание ещё раз.")
 
     await callback.answer()
 
@@ -181,7 +187,7 @@ async def receive_homework_video(message: Message, state: FSMContext):
     video_id = message.video.file_id
 
     await state.update_data(video_id=video_id, student_id=student_id, teacher_id=teacher_id)
-    await message.answer(text="Всё верно? Окончательно отправить?", reply_markup=kb.confirmation_video)
+    await message.answer(text="🧐Всё верно? Окончательно отправить?", reply_markup=kb.confirmation_video)
 
 
 @router.callback_query(F.data.in_(['vi_confirm', 'deo_change']), HomeworkState.WaitingForVideo)
@@ -214,19 +220,21 @@ async def confirm_homework_video(callback: CallbackQuery, state: FSMContext, bot
             filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_video.mp4"
 
             await bot.download_file(file_path, filename)
-            await callback.message.answer("Домашнее задание (видео) успешно отправлено!")
+            await callback.message.answer(text="✅Домашнее задание (видео) успешно отправлено!", reply_markup=kb.menu)
             await state.clear()
         except TelegramBadRequest as e:
             if "file is too big" in str(e):
-                await callback.message.edit_text(text='''
-                😔Извините, ваше видео слишком много весит (максимум 50 МБ)!\n\n
-                Попробуйте начать заново, выбрав отправку в виде ссылки.\n\n
-                Или отправьте другое видео, меньшего размера.
-                ''', reply_markup=kb.inline_keyboard_error_video)
+                text = (
+                    "<b>✉️Ошибка!</b>\n\n"
+                    "😔Извините, ваше видео слишком много весит (максимум 50 МБ)!\n"
+                    "├ Попробуйте начать заново, выбрав отправку в виде ссылки.\n"
+                    "├ Или отправьте другое видео, меньшего размера."
+                )
+                await callback.message.edit_text(text=text, reply_markup=kb.inline_keyboard_error_video)
             else:
-                await callback.message.answer("Произошла ошибка при отправке видео.")
+                await callback.message.answer("😔Произошла ошибка при отправке видео.")
     elif call_data == 'deo_change':
-        await callback.message.answer("Отлично, отправьте свое домашнее задание ещё раз.")
+        await callback.message.answer("😌Отлично, отправьте свое домашнее задание ещё раз.")
 
     await callback.answer()
 
@@ -266,7 +274,26 @@ async def receive_homework_text(message: Message, state: FSMContext):
     teacher_id = data.get('teacher_id')
 
     await state.update_data(text=message.text, student_id=student_id, teacher_id=teacher_id)
-    await message.answer(text="Всё верно? Окончательно отправить?", reply_markup=kb.confirmation_text)
+    await message.answer(text="🧐Всё верно? Окончательно отправить?", reply_markup=kb.confirmation_text)
+
+
+async def save_homework_with_links(directory_links, filename_links, links):
+    if not os.path.exists(directory_links):
+        os.makedirs(directory_links)
+
+    with open(filename_links, 'w', encoding='utf-8') as file:
+        file.write('<html><body>\n')
+        for link in links:
+            file.write(f'<a href="{link}">{link}</a><br>\n')
+        file.write('</body></html>')
+
+
+async def save_homework_text(directory, filename, text_content):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    with open(filename, 'w', encoding='utf-8') as file:
+        file.write(text_content)
 
 
 @router.callback_query(F.data.in_(['te_confirm', 'xt_change']), HomeworkState.WaitingForTextAndLinks)
@@ -286,59 +313,105 @@ async def confirm_homework_text(callback: CallbackQuery, state: FSMContext):
                 return
 
         full_name = f'{student.name} {student.last_name}'
-
-        links = find_links(text)
         timestamp = datetime.datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+        links = find_links(text)
 
         if links:
             directory_links = "application/media/links"
-            if not os.path.exists(directory_links):
-                os.makedirs(directory_links)
-
             filename_links = f"{directory_links}/{teacher_id}_{student_id}_{full_name}_{timestamp}_links.html"
-
-            with open(filename_links, 'w', encoding='utf-8') as file:
-                file.write('<html><body>\n')
-                for link in links:
-                    file.write(f'<a href="{link}">{link}</a><br>\n')
-                file.write('</body></html>')
-
-            response_message = "Домашнее задание (ссылка) успешно отправлено!"
+            await save_homework_with_links(directory_links, filename_links, links)
+            response_message = "✅Домашнее задание (ссылка) успешно отправлено!"
         else:
             text_content = format_text(text)
-
             directory = "application/media/text"
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-
             filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_text.txt"
+            await save_homework_text(directory, filename, text_content)
+            response_message = "✅Домашнее задание (текст) успешно отправлено!"
 
-            with open(filename, 'w', encoding='utf-8') as file:
-                file.write(text_content)
-
-            response_message = "Домашнее задание (текст) успешно отправлено!"
-
-        await callback.message.answer(response_message)
-        await state.clear()
+        await callback.message.answer(text=response_message, reply_markup=kb.menu)
     elif call_data == 'xt_change':
-        await callback.message.answer("Отправьте домашнее задание ещё раз.")
+        await callback.message.answer("😌Отлично, отправьте домашнее задание ещё раз.")
 
+    await callback.answer()
+    await state.clear()
+
+
+@router.message(F.voice, HomeworkState.WaitingForVoice)
+async def receive_homework_voice(message: Message, state: FSMContext):
+    tg_id = message.from_user.id
+
+    async with async_session() as session:
+        student = await session.scalar(select(Student).where(Student.tg_id == tg_id))
+        if not student:
+            await message.answer("Студент не найден в базе данных.")
+            return
+        student_id = student.id
+
+    data = await state.get_data()
+    teacher_id = data.get('teacher_id')
+
+    voice_id = message.voice.file_id
+
+    await state.update_data(voice_id=voice_id, student_id=student_id, teacher_id=teacher_id)
+    await message.answer(text="🧐Всё верно? Окончательно отправить?", reply_markup=kb.confirmation_voice)
+
+
+@router.callback_query(F.data.in_(['voi_confirm', 'ce_change']), HomeworkState.WaitingForVoice)
+async def confirm_homework_voice(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    call_data = callback.data
+
+    if call_data == 'voi_confirm':
+        data = await state.get_data()
+        voice_id = data['voice_id']
+        student_id = data['student_id']
+        teacher_id = data['teacher_id']
+
+        async with async_session() as session:
+            student = await session.scalar(select(Student).where(Student.id == student_id))
+            if not student:
+                await callback.message.answer("Произошла ошибка при поиске данных студента.")
+                return
+
+        full_name = f'{student.name} {student.last_name}'
+
+        file = await bot.get_file(voice_id)
+        file_path = file.file_path
+
+        directory = "application/media/voice"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        timestamp = datetime.datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+        filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_voice.ogg"
+
+        await bot.download_file(file_path, filename)
+        await callback.message.answer(text="✅Домашнее задание (голосовое сообщение) успешно отправлено!",
+                                      reply_markup=kb.menu)
+        await state.clear()
+    elif call_data == 'ce_change':
+        await callback.message.answer("😌Отлично, отправьте ваше домашнее задание ещё раз.")
     await callback.answer()
 
 
 @router.message(F.video | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState.WaitingForPhoto)
 async def wrong_homework_type(message: Message):
-    await message.answer("Вы выбрали не тот тип домашнего задания (ожидалось фото). Попробуйте еще раз.")
+    await message.answer("🥺Вы выбрали не тот тип домашнего задания (ожидалось фото). Попробуйте еще раз.")
 
 
 @router.message(F.photo | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState.WaitingForVideo)
 async def wrong_type_for_video(message: Message):
-    await message.answer("Вы выбрали не тот тип домашнего задания (ожидалось видео). Попробуйте еще раз.")
+    await message.answer("🥺Вы выбрали не тот тип домашнего задания (ожидалось видео). Попробуйте еще раз.")
 
 
 @router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState.WaitingForTextAndLinks)
 async def wrong_type_for_text_and_links(message: Message):
-    await message.answer("Вы выбрали не тот тип домашнего задания (ожидался текст или ссылка). Попробуйте еще раз.")
+    await message.answer("🥺Вы выбрали не тот тип домашнего задания (ожидался текст или ссылка). Попробуйте еще раз.")
+
+
+@router.message(F.photo | F.video | F.text | F.document | F.sticker | F.location | F.contact | F.poll,
+                HomeworkState.WaitingForVoice)
+async def wrong_type_for_voice(message: Message):
+    await message.answer("🥺Вы выбрали не тот тип домашнего задания (ожидалось голосовое). Попробуйте еще раз.")
