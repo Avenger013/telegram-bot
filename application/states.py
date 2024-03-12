@@ -30,6 +30,17 @@ class HomeworkState(StatesGroup):
     WaitingForVoice = State()
 
 
+class HomeworkState2(StatesGroup):
+    ChoiceTeacher2 = State()
+    ChoosingDZType2 = State()
+    WaitingForVideo2 = State()
+    WaitingForLinks2 = State()
+
+
+class MyStates(StatesGroup):
+    waiting_for_photo = State()
+
+
 class Newsletter(StatesGroup):
     Text = State()
 

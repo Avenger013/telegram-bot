@@ -118,6 +118,21 @@ dz_type = InlineKeyboardMarkup(inline_keyboard=[
     ]
 ])
 
+dz_type_2 = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='Видео',
+            callback_data='vvv'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='Ссылка',
+            callback_data='lll'
+        )
+    ]
+])
+
 confirmation = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
@@ -148,6 +163,21 @@ confirmation_video = InlineKeyboardMarkup(inline_keyboard=[
     ]
 ])
 
+confirmation_video_2 = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='Всё верно',
+            callback_data='iv_2_confirm'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='Хочу изменить',
+            callback_data='oed_2_change'
+        )
+    ]
+])
+
 confirmation_text = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
@@ -159,6 +189,21 @@ confirmation_text = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(
             text='Хочу изменить',
             callback_data='xt_change'
+        )
+    ]
+])
+
+confirmation_text_2 = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='Всё верно',
+            callback_data='et_2_confirm'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='Хочу изменить',
+            callback_data='tx_2_change'
         )
     ]
 ])
@@ -177,16 +222,6 @@ confirmation_voice = InlineKeyboardMarkup(inline_keyboard=[
         )
     ]
 ])
-
-# menu = ReplyKeyboardMarkup(keyboard=[
-#     [KeyboardButton(text='🔐 Личный кабинет')],
-#     [KeyboardButton(text='✉️ Отправка ДЗ')],
-#     [KeyboardButton(text='📊 ТОП учеников')],
-#     [KeyboardButton(text='📈 Лидер месяца')],
-#     [KeyboardButton(text='🎁 Монетизация')],
-#     [KeyboardButton(text='✍🏼 Поддержка')],
-#     [KeyboardButton(text='❔ О боте')]
-# ], resize_keyboard=True, one_time_keyboard=True)
 
 menu = ReplyKeyboardMarkup(keyboard=[
     [
@@ -261,13 +296,13 @@ inline_homework = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
             text='📆Отправить еженедельное задание',
-            callback_data='pass'
+            callback_data='zd_send'
         )
     ],
     [
         InlineKeyboardButton(
             text='📹Отправить видео с исполнением песни',
-            callback_data='pass1'
+            callback_data='vid_send'
         )
     ],
     [
@@ -288,13 +323,13 @@ inline_homework1 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
             text='📆Отправить еженедельное задание',
-            callback_data='pass'
+            callback_data='zd_send'
         )
     ],
     [
         InlineKeyboardButton(
             text='📹Отправить видео с исполнением песни',
-            callback_data='pass1'
+            callback_data='vid_send'
         )
     ],
     [
