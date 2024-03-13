@@ -10,15 +10,6 @@ registration = InlineKeyboardMarkup(inline_keyboard=[
             text='Регистрация',
             callback_data='registration'
         )
-    ]
-])
-
-registration1 = InlineKeyboardMarkup(inline_keyboard=[
-    [
-        InlineKeyboardButton(
-            text='Регистрация',
-            callback_data='registration'
-        )
     ],
     [
         InlineKeyboardButton(
@@ -486,6 +477,7 @@ async def choice_teacher(tg_id: int):
             for teacher in teachers_choice:
                 full_name = f'{teacher.name} {teacher.last_name}'
                 teachers_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'choice_{teacher.id}'))
+            teachers_choice_kb.add(InlineKeyboardButton(text="❌ Отмена", callback_data='cancel'))
         else:
             pass
     return teachers_choice_kb.adjust(1).as_markup()

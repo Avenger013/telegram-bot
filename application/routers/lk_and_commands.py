@@ -90,7 +90,7 @@ async def call_back(callback: CallbackQuery):
         else:
             await callback.message.edit_text(
                 text=f'{callback.from_user.first_name}, это ваш первый вход. \nПожалуйста, пройдите быструю регистрацию.',
-                reply_markup=kb.registration1
+                reply_markup=kb.registration
             )
 
 
