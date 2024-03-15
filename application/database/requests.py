@@ -20,7 +20,7 @@ async def get_teachers1(student_id: int):
 async def get_money():
     async with async_session() as session:
         result = await session.scalars(select(MonetizationSystem))
-        return result
+        return result.all()
 
 
 async def get_gifts():
@@ -139,6 +139,13 @@ async def get_gift_by_id(gift_id: int):
         result = await session.execute(select(PointsExchange).where(PointsExchange.id == gift_id))
         gift = result.scalars().first()
         return gift
+
+
+async def get_task_by_id(task_id: int):
+    async with async_session() as session:
+        result = await session.execute(select(MonetizationSystem).where(MonetizationSystem.id == task_id))
+        task = result.scalars().first()
+        return task
 
 
 async def get_newsletter_password() -> str:

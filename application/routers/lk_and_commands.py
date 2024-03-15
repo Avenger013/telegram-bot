@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from application.states import Gifts, Systems
 from application.database.models import async_session
 from application.database.requests import get_student_info, get_top_students, get_leader_of_the_month, get_money, \
-    get_gifts, get_student, get_gift_by_id, update_student_points, get_support, get_info
+    get_gifts, get_student, get_gift_by_id, update_student_points, get_support, get_info, get_task_by_id
 
 import application.keyboard as kb
 
@@ -353,11 +353,75 @@ async def call_information_bot(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith('receiving'))
 async def getting_points(callback: CallbackQuery, state: FSMContext):
+    monetization_items = await get_money()
     new_markup = await kb.choosing_a_money()
-    present_text = (
-        "🎁Выберите то, что вы сделали!\n"
+    response_text = "<b>Получение баллов:</b>\n"
+
+    for index, item in enumerate(monetization_items, start=1):
+        points_word = get_points_word(item.number_of_points)
+        response_text += f"        {index}) {item.task} - <b>{item.number_of_points}</b> {points_word}\n"
+
+    response_text += (
+        "\n\n🎁Выберите то, что вы сделали!\n"
         "├ Мы уведомим администратора и после проверки вам начисляться баллы!\n"
         "├ Можно выбрать 1 или несколько позиций сразу:"
     )
-    await callback.message.edit_text(text=present_text, reply_markup=new_markup)
+
+    await callback.message.edit_text(text=response_text, reply_markup=new_markup, parse_mode='HTML')
     await state.set_state(Systems.System)
+
+
+@router.callback_query(F.data.startswith('6_monetization_'), Systems.System)
+async def task_selected(callback: CallbackQuery, state: FSMContext):
+    task_id = int(callback.data.split('_')[2])
+    data = await state.get_data()
+    selected_tasks = data.get('selected_tasks', [])
+
+    if task_id in selected_tasks:
+        selected_tasks.remove(task_id)
+        await callback.answer("Позиция удалена из списка выбранных.")
+    else:
+        selected_tasks.append(task_id)
+        await callback.answer("Позиция добавлена в список выбранных.")
+
+    await state.update_data(selected_tasks=selected_tasks)
+
+    new_markup = await kb.choosing_a_money(selected_tasks)
+    await callback.message.edit_reply_markup(reply_markup=new_markup)
+
+
+async def calculate_total_points_for_tasks(selected_task_ids):
+    total_points = 0
+
+    for task_id in selected_task_ids:
+        task = await get_task_by_id(int(task_id))
+        if task:
+            total_points += task.number_of_points
+
+    return total_points
+
+
+@router.callback_query(F.data == 'on_selecting')
+async def selecting_money(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    selected_task_ids = data.get('selected_tasks', [])
+    tg_id = callback.from_user.id
+
+    if not selected_task_ids:
+        await callback.answer("Вы не выбрали ни одной позиции.")
+        return
+
+    async with async_session() as session:
+        student = await get_student(session, tg_id)
+        if student:
+            total_points_to_add = await calculate_total_points_for_tasks(selected_task_ids)
+            student.point += total_points_to_add
+            await update_student_points(session, student.id, student.point)
+            await session.refresh(student)
+            await callback.message.answer(
+                text=f"✅ Баллы успешно начислены! Ваше текущее количество баллов: {student.point}",
+                reply_markup=kb.menu)
+        else:
+            await callback.message.answer("Профиль студента не найден.")
+
+    await state.clear()
