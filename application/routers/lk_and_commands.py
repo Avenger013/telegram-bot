@@ -211,8 +211,9 @@ async def call_monetization_list(callback: CallbackQuery):
 @router.callback_query(F.data.startswith('buy'))
 async def exchange_points(callback: CallbackQuery, state: FSMContext):
     new_markup = await kb.choosing_a_gift()
-    await callback.message.edit_text(text="Выберите то, что хотите получить (можно выбрать 1 или несколько):",
-                                     reply_markup=new_markup)
+    await callback.message.edit_text(
+        text="Выберите то, что хотите получить (можно выбрать 1 или несколько позиций сразу):",
+        reply_markup=new_markup)
     await state.set_state(Gifts.Gift)
 
 
@@ -256,9 +257,9 @@ async def selecting_gifts(callback: CallbackQuery, state: FSMContext):
         if student:
             total_points_needed, gifts_descriptions = await calculate_total_points(selected_gift_ids)
             if student.point < total_points_needed:
-                await callback.answer("Извините, у вас недостаточно очков.")
-                await callback.message.edit_text(text="Хотите выбрать подарки заново или завершить выбор?",
-                                                 reply_markup=kb.choice_keyboard)
+                await callback.message.edit_text("Извините, у вас недостаточно очков.")
+                await callback.message.answer(text="Хотите выбрать подарки заново или завершить выбор?",
+                                              reply_markup=kb.choice_keyboard)
             else:
                 student.point -= total_points_needed
                 await update_student_points(session, student.id, student.point)
@@ -279,8 +280,9 @@ async def selecting_gifts(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.startswith('select_gifts_again'))
 async def exchange_points(callback: CallbackQuery, state: FSMContext):
     new_markup = await kb.choosing_a_gift()
-    await callback.message.edit_text(text="Выберите то, что хотите получить (можно выбрать 1 или несколько):",
-                                     reply_markup=new_markup)
+    await callback.message.edit_text(
+        text="Выберите то, что хотите получить (можно выбрать 1 или несколько позиций сразу):",
+        reply_markup=new_markup)
     await state.set_state(Gifts.Gift)
 
 
@@ -352,7 +354,10 @@ async def call_information_bot(callback: CallbackQuery):
 @router.callback_query(F.data.startswith('receiving'))
 async def getting_points(callback: CallbackQuery, state: FSMContext):
     new_markup = await kb.choosing_a_money()
-    await callback.message.edit_text(
-        text="Выберите то, что вы сделали, мы уведомим администратора и после проверки вам начисляться баллы (можно выбрать 1 или несколько):",
-        reply_markup=new_markup)
+    present_text = (
+        "🎁Выберите то, что вы сделали!\n"
+        "├ Мы уведомим администратора и после проверки вам начисляться баллы!\n"
+        "├ Можно выбрать 1 или несколько позиций сразу:"
+    )
+    await callback.message.edit_text(text=present_text, reply_markup=new_markup)
     await state.set_state(Systems.System)

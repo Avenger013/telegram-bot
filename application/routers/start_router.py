@@ -1,6 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
+from aiogram.fsm.context import FSMContext
 
 import application.keyboard as kb
 
@@ -23,7 +24,8 @@ async def smd_start(message: Message):
 
 
 @router.callback_query(F.data.startswith('cancellation'))
-async def call_cancellation(callback: CallbackQuery):
+async def call_cancellation(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
     welcome_text = (
         f"Привет, <b>{callback.from_user.first_name}</b>, добро пожаловать!\n\n"
         "Личный кабинет ученика - /profile\n"

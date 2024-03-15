@@ -91,6 +91,15 @@ async def call_submitting_homework(callback: CallbackQuery, state: FSMContext):
     await state.set_state(HomeworkState.ChoiceTeacher)
 
 
+@router.callback_query(F.data.startswith('1_canceled'))
+async def call_submitting_homework(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    tg_id = callback.from_user.id
+    await callback.message.edit_text(text='Выберите преподавателя, которому вы хотите отправить домашнее задание:',
+                                     reply_markup=await kb.choice_teacher(tg_id))
+    await state.set_state(HomeworkState.ChoiceTeacher)
+
+
 @router.callback_query(F.data.startswith('choice_'), HomeworkState.ChoiceTeacher)
 async def teacher_selected_for_homework(callback: CallbackQuery, state: FSMContext):
     teacher_id = callback.data.split('_')[1]
@@ -101,25 +110,30 @@ async def teacher_selected_for_homework(callback: CallbackQuery, state: FSMConte
 
 @router.callback_query(F.data.startswith('p_p'), HomeworkState.ChoosingDZType)
 async def dz_type_photo(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('😁Отлично, теперь пришлите фото вашего домашнего задания!')
+    await callback.message.edit_text(text='😁Отлично, теперь пришлите фото вашего домашнего задания!',
+                                     reply_markup=kb.tree_can_send)
     await state.set_state(HomeworkState.WaitingForPhoto)
 
 
 @router.callback_query(F.data.startswith('v_v'), HomeworkState.ChoosingDZType)
 async def dz_type_video(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('😁Отлично, теперь пришлите видео вашего домашнего задания!')
+    await callback.message.edit_text(text='😁Отлично, теперь пришлите видео вашего домашнего задания!',
+                                     reply_markup=kb.tree_can_send)
     await state.set_state(HomeworkState.WaitingForVideo)
 
 
 @router.callback_query(F.data.startswith('t_l'), HomeworkState.ChoosingDZType)
 async def dz_type_text_link(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('😁Отлично, теперь напишите текст вашего домашнего задания или скиньте ссылку!')
+    await callback.message.edit_text(
+        text='😁Отлично, теперь напишите текст вашего домашнего задания или скиньте ссылку!',
+        reply_markup=kb.tree_can_send)
     await state.set_state(HomeworkState.WaitingForTextAndLinks)
 
 
 @router.callback_query(F.data.startswith('o_i'), HomeworkState.ChoosingDZType)
 async def dz_type_text_link(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('😁Отлично, теперь запишите голосовое сообщение и отправьте в чат!')
+    await callback.message.edit_text(text='😁Отлично, теперь запишите голосовое сообщение и отправьте в чат!',
+                                     reply_markup=kb.tree_can_send)
     await state.set_state(HomeworkState.WaitingForVoice)
 
 
@@ -135,7 +149,8 @@ async def receive_homework_photo(message: Message, state: FSMContext):
 
     if message.media_group_id:
         await state.update_data(current_media_group_id=message.media_group_id)
-        await message.answer("🚫Пожалуйста, отправьте только одно фото, попробуйте еще раз!")
+        await message.answer(text="🚫Пожалуйста, отправьте только одно фото, попробуйте еще раз!",
+                             reply_markup=kb.tree_can_send)
         return
 
     async with async_session() as session:
@@ -186,7 +201,8 @@ async def confirm_homework_photo(callback: CallbackQuery, state: FSMContext, bot
         await callback.message.answer(text="✅Домашнее задание (фото) успешно отправлено!", reply_markup=kb.menu)
         await state.clear()
     elif call_data == 'change':
-        await callback.message.answer("😌Отлично, отправьте свое домашнее задание ещё раз.")
+        await callback.message.answer(text="😌Отлично, отправьте свое домашнее задание ещё раз.",
+                                      reply_markup=kb.tree_can_send)
 
     await callback.answer()
 
@@ -253,9 +269,10 @@ async def confirm_homework_video(callback: CallbackQuery, state: FSMContext, bot
                 )
                 await callback.message.edit_text(text=text, reply_markup=kb.inline_keyboard_error_video)
             else:
-                await callback.message.answer("😔Произошла ошибка при отправке видео.")
+                await callback.message.answer(text="😔Произошла ошибка при отправке видео.", reply_markup=kb.menu1)
     elif call_data == 'deo_change':
-        await callback.message.answer("😌Отлично, отправьте свое домашнее задание ещё раз.")
+        await callback.message.answer(text="😌Отлично, отправьте свое домашнее задание ещё раз.",
+                                      reply_markup=kb.tree_can_send)
 
     await callback.answer()
 
@@ -351,7 +368,8 @@ async def confirm_homework_text(callback: CallbackQuery, state: FSMContext):
 
         await callback.message.answer(text=response_message, reply_markup=kb.menu)
     elif call_data == 'xt_change':
-        await callback.message.answer("😌Отлично, отправьте домашнее задание ещё раз.")
+        await callback.message.answer(text="😌Отлично, отправьте домашнее задание ещё раз.",
+                                      reply_markup=kb.tree_can_send)
 
     await callback.answer()
     await state.clear()
@@ -410,12 +428,22 @@ async def confirm_homework_voice(callback: CallbackQuery, state: FSMContext, bot
                                       reply_markup=kb.menu)
         await state.clear()
     elif call_data == 'ce_change':
-        await callback.message.answer("😌Отлично, отправьте ваше домашнее задание ещё раз.")
+        await callback.message.answer(text="😌Отлично, отправьте ваше домашнее задание ещё раз.",
+                                      reply_markup=kb.tree_can_send)
     await callback.answer()
 
 
 @router.callback_query(F.data.startswith('vid_send'))
 async def call_submitting_homework_2(callback: CallbackQuery, state: FSMContext):
+    tg_id = callback.from_user.id
+    await callback.message.edit_text(text='Выберите преподавателя, которому вы хотите отправить домашнее задание:',
+                                     reply_markup=await kb.choice_teacher(tg_id))
+    await state.set_state(HomeworkState2.ChoiceTeacher2)
+
+
+@router.callback_query(F.data.startswith('2_canceled'))
+async def call_submitting_homework_2(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
     tg_id = callback.from_user.id
     await callback.message.edit_text(text='Выберите преподавателя, которому вы хотите отправить домашнее задание:',
                                      reply_markup=await kb.choice_teacher(tg_id))
@@ -432,13 +460,16 @@ async def teacher_selected_for_homework_2(callback: CallbackQuery, state: FSMCon
 
 @router.callback_query(F.data.startswith('vvv'), HomeworkState2.ChoosingDZType2)
 async def dz_type_video_2(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('😁Отлично, теперь пришлите видео вашего домашнего задания!')
+    await callback.message.edit_text(text='😁Отлично, теперь пришлите видео вашего домашнего задания!',
+                                     reply_markup=kb.tree_can_send)
     await state.set_state(HomeworkState2.WaitingForVideo2)
 
 
 @router.callback_query(F.data.startswith('lll'), HomeworkState2.ChoosingDZType2)
 async def dz_type_links_2(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text('😁Отлично, теперь пришлите ссылку, по которой можно будет ознакомиться с вашим видео!')
+    await callback.message.edit_text(
+        text='😁Отлично, теперь пришлите ссылку, по которой можно будет ознакомиться с вашим видео!',
+        reply_markup=kb.tree_can_send)
     await state.set_state(HomeworkState2.WaitingForLinks2)
 
 
@@ -504,9 +535,10 @@ async def confirm_homework_video_2(callback: CallbackQuery, state: FSMContext, b
                 )
                 await callback.message.edit_text(text=text, reply_markup=kb.inline_keyboard_error_video)
             else:
-                await callback.message.answer("😔Произошла ошибка при отправке видео.")
+                await callback.message.answer(text="😔Произошла ошибка при отправке видео.", reply_markup=kb.menu1)
     elif call_data == 'oed_2_change':
-        await callback.message.answer("😌Отлично, отправьте свое домашнее задание ещё раз.")
+        await callback.message.answer(text="😌Отлично, отправьте свое домашнее задание ещё раз.",
+                                      reply_markup=kb.tree_can_send)
 
     await callback.answer()
 
@@ -558,7 +590,8 @@ async def confirm_homework_text_2(callback: CallbackQuery, state: FSMContext):
             response_message = "❎Вы отправили текст, а нужно ссылку!"
         await callback.message.answer(text=response_message, reply_markup=kb.menu)
     elif call_data == 'tx_2_change':
-        await callback.message.answer("😌Отлично, отправьте домашнее задание ещё раз.")
+        await callback.message.answer(text="😌Отлично, отправьте домашнее задание ещё раз.",
+                                      reply_markup=kb.tree_can_send)
 
     await callback.answer()
     await state.clear()
@@ -567,34 +600,41 @@ async def confirm_homework_text_2(callback: CallbackQuery, state: FSMContext):
 @router.message(F.video | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState.WaitingForPhoto)
 async def wrong_homework_type(message: Message):
-    await message.answer("🥺Вы выбрали не тот тип домашнего задания (ожидалось фото). Попробуйте еще раз.")
+    await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидалось фото). Попробуйте еще раз.",
+                         reply_markup=kb.tree_can_send)
 
 
 @router.message(F.photo | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState.WaitingForVideo)
 async def wrong_type_for_video(message: Message):
-    await message.answer("🥺Вы выбрали не тот тип домашнего задания (ожидалось видео). Попробуйте еще раз.")
+    await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидалось видео). Попробуйте еще раз.",
+                         reply_markup=kb.tree_can_send)
 
 
 @router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState.WaitingForTextAndLinks)
 async def wrong_type_for_text_and_links(message: Message):
-    await message.answer("🥺Вы выбрали не тот тип домашнего задания (ожидался текст или ссылка). Попробуйте еще раз.")
+    await message.answer(
+        text="🥺Вы выбрали не тот тип домашнего задания (ожидался текст или ссылка). Попробуйте еще раз.",
+        reply_markup=kb.tree_can_send)
 
 
 @router.message(F.photo | F.video | F.text | F.document | F.sticker | F.location | F.contact | F.poll,
                 HomeworkState.WaitingForVoice)
 async def wrong_type_for_voice(message: Message):
-    await message.answer("🥺Вы выбрали не тот тип домашнего задания (ожидалось голосовое). Попробуйте еще раз.")
+    await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидалось голосовое). Попробуйте еще раз.",
+                         reply_markup=kb.tree_can_send)
 
 
 @router.message(F.photo | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState2.WaitingForVideo2)
 async def wrong_type_for_video_2(message: Message):
-    await message.answer("🥺Вы отправили не тот тип сообщения (ожидалось видео). Попробуйте еще раз.")
+    await message.answer(text="🥺Вы отправили не тот тип сообщения (ожидалось видео). Попробуйте еще раз.",
+                         reply_markup=kb.tree_can_send)
 
 
 @router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState2.WaitingForLinks2)
 async def wrong_type_for_links_2(message: Message):
-    await message.answer("🥺Вы отправили не тот тип сообщения (ожидалась ссылка). Попробуйте еще раз.")
+    await message.answer(text="🥺Вы отправили не тот тип сообщения (ожидалась ссылка). Попробуйте еще раз.",
+                         reply_markup=kb.tree_can_send)

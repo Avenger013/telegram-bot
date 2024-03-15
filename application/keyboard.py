@@ -19,6 +19,33 @@ registration = InlineKeyboardMarkup(inline_keyboard=[
     ]
 ])
 
+can = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='◀️ Отмена регистрации',
+            callback_data='cancellation'
+        )
+    ]
+])
+
+can_update = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='◀️ Отмена изменений',
+            callback_data='cell'
+        )
+    ]
+])
+
+tree_can_send = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='◀️Отмена отправки',
+            callback_data='cancel'
+        )
+    ]
+])
+
 tool1 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
@@ -36,6 +63,12 @@ tool1 = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(
             text='🎤/🎸 Вокал и Гитара',
             callback_data='vocal_guitar'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️ Отмена регистрации',
+            callback_data='cancellation'
         )
     ]
 ])
@@ -58,6 +91,12 @@ tool2 = InlineKeyboardMarkup(inline_keyboard=[
             text='🎤/🎸 Вокал и Гитара',
             callback_data='new_vocal_guitar'
         )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️ Отмена изменений',
+            callback_data='cell'
+        )
     ]
 ])
 
@@ -78,6 +117,12 @@ tool3 = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(
             text='🎤/🎸 Вокал и Гитара',
             callback_data='new_parts_vocal_guitar'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️ Отмена изменений',
+            callback_data='cell'
         )
     ]
 ])
@@ -106,6 +151,12 @@ dz_type = InlineKeyboardMarkup(inline_keyboard=[
             text='Голосовое',
             callback_data='o_i'
         )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️ Назад',
+            callback_data='1_canceled'
+        )
     ]
 ])
 
@@ -120,6 +171,12 @@ dz_type_2 = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(
             text='Ссылка',
             callback_data='lll'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️ Назад',
+            callback_data='2_canceled'
         )
     ]
 ])
@@ -380,16 +437,16 @@ inline_keyboard_error_video = InlineKeyboardMarkup(inline_keyboard=[
             text='📹Отправить другое видео',
             callback_data='deo_change'
         )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️Отмена отправки',
+            callback_data='cancel'
+        )
     ]
 ])
 
 back = InlineKeyboardMarkup(inline_keyboard=[
-    [
-        InlineKeyboardButton(
-            text='◀️Назад',
-            callback_data='back'
-        )
-    ],
     [
         InlineKeyboardButton(
             text='🌟Получение баллов',
@@ -400,6 +457,12 @@ back = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(
             text='💎Обмен баллов',
             callback_data='buy'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️Назад',
+            callback_data='back'
         )
     ]
 ])
@@ -425,12 +488,6 @@ back3 = InlineKeyboardMarkup(inline_keyboard=[
 back4 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
-            text='🔐Перейти в личный кабинет',
-            callback_data='back'
-        )
-    ],
-    [
-        InlineKeyboardButton(
             text='🌟Получение баллов',
             callback_data='receiving'
         )
@@ -439,6 +496,12 @@ back4 = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(
             text='💎Обмен баллов',
             callback_data='buy'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='🔐Перейти в личный кабинет',
+            callback_data='back'
         )
     ]
 ])
@@ -477,7 +540,7 @@ async def choice_teacher(tg_id: int):
             for teacher in teachers_choice:
                 full_name = f'{teacher.name} {teacher.last_name}'
                 teachers_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'choice_{teacher.id}'))
-            teachers_choice_kb.add(InlineKeyboardButton(text="❌ Отмена", callback_data='cancel'))
+            teachers_choice_kb.add(InlineKeyboardButton(text="◀️ Назад", callback_data='cancel'))
         else:
             pass
     return teachers_choice_kb.adjust(1).as_markup()
@@ -491,6 +554,7 @@ async def teachers_choice_students_da(selected_ids=[]):
         full_name = f"{status_emoji} {teacher.name} {teacher.last_name}"
         teachers_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'select_teacher_{teacher.id}'))
     teachers_choice_kb.add(InlineKeyboardButton(text="🎯Подтвердить выбор", callback_data='done_selecting_teachers'))
+    teachers_choice_kb.add(InlineKeyboardButton(text="◀️Отмена", callback_data='cancellation'))
     return teachers_choice_kb.adjust(2).as_markup()
 
 
@@ -502,6 +566,7 @@ async def teachers_choice_students_da_v(selected_ids=[]):
         full_name = f"{status_emoji} {teacher.name} {teacher.last_name}"
         teachers_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'1select_teacher_{teacher.id}'))
     teachers_choice_kb.add(InlineKeyboardButton(text="🎯Подтвердить выбор", callback_data='done_selecting_teachers'))
+    teachers_choice_kb.add(InlineKeyboardButton(text="◀️Отмена", callback_data='cancellation'))
     return teachers_choice_kb.adjust(1).as_markup()
 
 
@@ -513,6 +578,7 @@ async def teachers_choice_students_da_g(selected_ids=[]):
         full_name = f"{status_emoji} {teacher.name} {teacher.last_name}"
         teachers_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'2select_teacher_{teacher.id}'))
     teachers_choice_kb.add(InlineKeyboardButton(text="🎯Подтвердить выбор", callback_data='done_selecting_teachers'))
+    teachers_choice_kb.add(InlineKeyboardButton(text="◀️Отмена", callback_data='cancellation'))
     return teachers_choice_kb.adjust(1).as_markup()
 
 
