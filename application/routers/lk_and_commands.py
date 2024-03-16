@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from application.states import Gifts, Systems
-from application.database.models import async_session
+from application.database.models import PointsHistory, async_session
 from application.database.requests import get_student_info, get_top_students, get_leader_of_the_month, get_money, \
     get_gifts, get_student, get_gift_by_id, update_student_points, get_support, get_info, get_task_by_id
 
@@ -141,10 +141,11 @@ async def leader_of_the_month(message: Message):
     leader_info = await get_leader_of_the_month(current_year, current_month)
 
     if leader_info:
-        response_message = f'''
-<b>🏆 Лидер месяца:</b>\n\n
-<b>{leader_info['name']} {leader_info['last_name']}</b> с общим количеством баллов: <b>{leader_info['total_points']}</b>
-'''
+        response_message = (
+            "<b>🏆 Лидер месяца:</b>\n\n"
+            f"<b>🌟 {leader_info['name']} {leader_info['last_name']} 🌟</b>\n\n"
+            f"Количество заработанных за этот месяц баллов: <b>{leader_info['total_points']}</b>"
+        )
     else:
         response_message = "<b>В этом месяце еще нет лидера.</b>"
 
@@ -159,10 +160,11 @@ async def call_leader_of_the_month(callback: CallbackQuery):
     leader_info = await get_leader_of_the_month(current_year, current_month)
 
     if leader_info:
-        response_message = f'''
-<b>🏆 Лидер месяца:</b>\n\n
-<b>{leader_info['name']} {leader_info['last_name']}</b> с общим количеством баллов: <b>{leader_info['total_points']}</b>
-'''
+        response_message = (
+            "<b>🏆 Лидер месяца:</b>\n\n"
+            f"<b>🌟 {leader_info['name']} {leader_info['last_name']} 🌟</b>\n\n"
+            f"Количество заработанных за этот месяц баллов: <b>{leader_info['total_points']}</b>"
+        )
     else:
         response_message = "<b>В этом месяце еще нет лидера.</b>"
 
@@ -415,6 +417,11 @@ async def selecting_money(callback: CallbackQuery, state: FSMContext):
         student = await get_student(session, tg_id)
         if student:
             total_points_to_add = await calculate_total_points_for_tasks(selected_task_ids)
+
+            new_points_history = PointsHistory(student_id=student.id, points_added=total_points_to_add,
+                                               date_added=datetime.now())
+            session.add(new_points_history)
+
             student.point += total_points_to_add
             await update_student_points(session, student.id, student.point)
             await session.refresh(student)

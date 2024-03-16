@@ -1,6 +1,7 @@
+from sqlalchemy import select, update, func, extract
+
 from application.database.models import Teacher, Student, Administrator, Password, PointsHistory, StudentTeacher, \
     MonetizationSystem, PointsExchange, SupportInfo, InfoBot, async_session
-from sqlalchemy import select, update, func, extract
 
 
 async def get_teachers():
