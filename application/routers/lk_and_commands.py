@@ -191,8 +191,7 @@ async def monetization_list(message: Message):
     await message.answer(text=response_text, reply_markup=kb.back4, parse_mode='HTML')
 
 
-@router.callback_query(F.data.startswith('money'))
-async def call_monetization_list(callback: CallbackQuery):
+async def call_monetization_list_info(callback: CallbackQuery, reply_markup):
     monetization_items = await get_money()
     response_text = "<b>Получение баллов:</b>\n"
 
@@ -207,7 +206,18 @@ async def call_monetization_list(callback: CallbackQuery):
         points_word = get_points_word(gift.number_of_points)
         response_text += f"        {gift.present} - {gift.number_of_points} {points_word}\n"
 
-    await callback.message.edit_text(text=response_text, reply_markup=kb.back, parse_mode='HTML')
+    await callback.message.edit_text(text=response_text, parse_mode='HTML', reply_markup=reply_markup)
+
+
+@router.callback_query(F.data.startswith('comeback'))
+async def call_comeback(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await call_monetization_list_info(callback, reply_markup=kb.back4)
+
+
+@router.callback_query(F.data.startswith('money'))
+async def call_monetization_list(callback: CallbackQuery):
+    await call_monetization_list_info(callback, reply_markup=kb.back3)
 
 
 @router.callback_query(F.data.startswith('buy'))
