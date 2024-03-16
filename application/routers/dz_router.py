@@ -40,6 +40,7 @@ async def info_homework(callback: CallbackQuery, reply_markup):
     await callback.message.edit_text(text=homework_text, parse_mode='HTML', reply_markup=reply_markup)
 
 
+@router.message(F.text == '✉️ Отправка ДЗ')
 @router.message(Command('homework'))
 async def submitting_homework(message: Message):
     tg_id = message.from_user.id
