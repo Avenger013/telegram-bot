@@ -300,21 +300,8 @@ async def exchange_points(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith('finish_selection'))
 async def call_monetization_list(callback: CallbackQuery):
-    monetization_items = await get_money()
-    response_text = "<b>Получение баллов:</b>\n"
-
-    for item in monetization_items:
-        points_word = get_points_word(item.number_of_points)
-        response_text += f"        {item.task} - {item.number_of_points} {points_word}\n"
-
-    gifts = await get_gifts()
-    response_text += "\n\n<b>Обмен баллов:</b>\n"
-
-    for gift in gifts:
-        points_word = get_points_word(gift.number_of_points)
-        response_text += f"        {gift.present} - {gift.number_of_points} {points_word}\n"
-
-    await callback.message.edit_text(text=response_text, reply_markup=kb.back4, parse_mode='HTML')
+    # await state.clear()
+    await call_monetization_list_info(callback, reply_markup=kb.back4)
 
 
 @router.message(F.text == '✍🏼 Поддержка')
