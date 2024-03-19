@@ -22,15 +22,19 @@ async def set_commands(bot: Bot):
         ),
         BotCommand(
             command='monetization',
-            description='Монетизация',
+            description='Система баллов',
+        ),
+        BotCommand(
+            command='info',
+            description='Информация о боте',
         ),
         BotCommand(
             command='support',
             description='Поддержка',
         ),
         BotCommand(
-            command='info',
-            description='Информация о боте',
+            command='newsletter',
+            description='Рассылка',
         ),
         BotCommand(
             command='teacher',
@@ -40,10 +44,6 @@ async def set_commands(bot: Bot):
             command='start',
             description='Перезапуск бота',
         ),
-        BotCommand(
-            command='newsletter',
-            description='Рассылка',
-        )
     ]
 
     await bot.set_my_commands(commands, BotCommandScopeDefault())

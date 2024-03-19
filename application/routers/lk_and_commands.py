@@ -217,7 +217,7 @@ async def call_comeback(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith('money'))
 async def call_monetization_list(callback: CallbackQuery):
-    await call_monetization_list_info(callback, reply_markup=kb.back3)
+    await call_monetization_list_info(callback, reply_markup=kb.back)
 
 
 @router.callback_query(F.data.startswith('buy'))
@@ -436,8 +436,8 @@ async def selecting_money(callback: CallbackQuery, state: FSMContext):
             await update_student_points(session, student.id, student.point)
             await session.refresh(student)
             await callback.message.answer(
-                text=f"✅ Баллы успешно начислены! Ваше текущее количество баллов: {student.point}",
-                reply_markup=kb.menu)
+                text=f"✅ Баллы успешно начислены!\nВаше текущее количество баллов: <b>{student.point}</b>",
+                parse_mode='HTML', reply_markup=kb.menu)
         else:
             await callback.message.answer("Профиль студента не найден.")
 
