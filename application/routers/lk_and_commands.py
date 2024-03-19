@@ -269,7 +269,7 @@ async def selecting_gifts(callback: CallbackQuery, state: FSMContext):
         if student:
             total_points_needed, gifts_descriptions = await calculate_total_points(selected_gift_ids)
             if student.point < total_points_needed:
-                await callback.message.edit_text("Извините, у вас недостаточно очков.")
+                await callback.message.edit_text("Извините, у вас недостаточно баллов.")
                 await callback.message.answer(text="Хотите выбрать подарки заново или завершить выбор?",
                                               reply_markup=kb.choice_keyboard)
             else:
@@ -299,8 +299,8 @@ async def exchange_points(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith('finish_selection'))
-async def call_monetization_list(callback: CallbackQuery):
-    # await state.clear()
+async def call_monetization_list(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
     await call_monetization_list_info(callback, reply_markup=kb.back4)
 
 
