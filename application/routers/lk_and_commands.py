@@ -220,13 +220,29 @@ async def call_monetization_list(callback: CallbackQuery):
     await call_monetization_list_info(callback, reply_markup=kb.back)
 
 
-@router.callback_query(F.data.startswith('buy'))
 async def exchange_points(callback: CallbackQuery, state: FSMContext):
+    gift_items = await get_gifts()
     new_markup = await kb.choosing_a_gift()
-    await callback.message.edit_text(
-        text="Выберите то, что хотите получить (можно выбрать 1 или несколько позиций сразу):",
-        reply_markup=new_markup)
+    response_text = "<b>Обмен баллов:</b>\n"
+
+    for index, item in enumerate(gift_items, start=1):
+        points_word = get_points_word(item.number_of_points)
+        response_text += f"        {index}) {item.present} - <b>{item.number_of_points}</b> {points_word}\n"
+
+    response_text += (
+        "\n\n💎Выберите то, что хотите получить!\n"
+        "├ Мы уведомим администратора, после чего просто подойдите перед занятием для получения подарка!\n"
+        "├ Можно выбрать 1 или несколько позиций сразу:"
+    )
+
+    await callback.message.edit_text(text=response_text, reply_markup=new_markup, parse_mode='HTML')
     await state.set_state(Gifts.Gift)
+
+
+@router.callback_query(F.data.startswith('buy'))
+async def exchange_points_1(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await exchange_points(callback, state)
 
 
 @router.callback_query(F.data.startswith('gifts_'), Gifts.Gift)
@@ -234,12 +250,14 @@ async def gift_selected(callback: CallbackQuery, state: FSMContext):
     gift_id = int(callback.data.split('_')[1])
     data = await state.get_data()
     selected_gifts = data.get('selected_gifts', [])
+
     if gift_id in selected_gifts:
         selected_gifts.remove(gift_id)
         await callback.answer("Подарок удален из списка выбранных.")
     else:
         selected_gifts.append(gift_id)
         await callback.answer("Подарок добавлен в список выбранных.")
+
     await state.update_data(selected_gifts=selected_gifts)
 
     new_markup = await kb.choosing_a_gift(selected_gifts)
@@ -290,12 +308,9 @@ async def selecting_gifts(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith('select_gifts_again'))
-async def exchange_points(callback: CallbackQuery, state: FSMContext):
-    new_markup = await kb.choosing_a_gift()
-    await callback.message.edit_text(
-        text="Выберите то, что хотите получить (можно выбрать 1 или несколько позиций сразу):",
-        reply_markup=new_markup)
-    await state.set_state(Gifts.Gift)
+async def exchange_points_2(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await exchange_points(callback, state)
 
 
 @router.callback_query(F.data.startswith('finish_selection'))

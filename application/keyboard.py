@@ -586,12 +586,20 @@ async def teachers_choice_students_da_g(selected_ids=[]):
 async def choosing_a_gift(selected_ids=[]):
     choosing_a_gift_kb = InlineKeyboardBuilder()
     choosing_a_gift = await get_gifts()
-    for PointsExchanges in choosing_a_gift:
-        status_emoji = "✅" if PointsExchanges.id in selected_ids else ""
-        choosing_a_gift_kb.add(InlineKeyboardButton(text=f"{status_emoji} {PointsExchanges.present}",
-                                                    callback_data=f'gifts_{PointsExchanges.id}'))
-    choosing_a_gift_kb.add(InlineKeyboardButton(text="🎯 Подтвердить", callback_data='selecting_gifts'))
-    return choosing_a_gift_kb.adjust(1).as_markup()
+    total_buttons = len(choosing_a_gift)
+    for index, PointsExchange in enumerate(choosing_a_gift, start=1):
+        status_emoji = "✅" if PointsExchange.id in selected_ids else ""
+        points_word = get_points_word(PointsExchange.number_of_points)
+        button_text = f"{status_emoji} {index}) {PointsExchange.number_of_points} {points_word}"
+        choosing_a_gift_kb.add(
+            InlineKeyboardButton(text=button_text, callback_data=f'gifts_{PointsExchange.id}'))
+    if (total_buttons + 2) % 2 == 0:
+        choosing_a_gift_kb.add(InlineKeyboardButton(text="◀️ Вернуться", callback_data='comeback'))
+        choosing_a_gift_kb.add(InlineKeyboardButton(text="🎯 Подтвердить", callback_data='selecting_gifts'))
+    else:
+        choosing_a_gift_kb.add(InlineKeyboardButton(text="🎯 Подтвердить", callback_data='selecting_gifts'))
+        choosing_a_gift_kb.add(InlineKeyboardButton(text="◀️ Вернуться", callback_data='comeback'))
+    return choosing_a_gift_kb.adjust(2).as_markup()
 
 
 async def choosing_a_money(selected_ids=[]):

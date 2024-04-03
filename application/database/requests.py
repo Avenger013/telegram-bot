@@ -27,7 +27,7 @@ async def get_money():
 async def get_gifts():
     async with async_session() as session:
         result = await session.scalars(select(PointsExchange))
-        return result
+        return result.all()
 
 
 async def get_info():
