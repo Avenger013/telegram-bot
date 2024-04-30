@@ -507,6 +507,27 @@ back4 = InlineKeyboardMarkup(inline_keyboard=[
     ]
 ])
 
+back5 = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='📍Отметиться!',
+            callback_data='check_in'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='🔐Перейти в личный кабинет',
+            callback_data='back'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️Назад',
+            callback_data='cancel'
+        )
+    ]
+])
+
 choice_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(

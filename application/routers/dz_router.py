@@ -11,7 +11,7 @@ from aiogram.exceptions import TelegramBadRequest
 
 from application.states import HomeworkState, HomeworkState2
 from application.database.models import Student, async_session
-from application.database.requests import get_student
+from application.database.requests import get_student, get_tasks_for_the_week
 
 import application.keyboard as kb
 
@@ -596,6 +596,19 @@ async def confirm_homework_text_2(callback: CallbackQuery, state: FSMContext):
 
     await callback.answer()
     await state.clear()
+
+
+@router.callback_query(F.data.startswith('zd_send'))
+async def submit_homework(callback: CallbackQuery):
+    bot_week_quest = await get_tasks_for_the_week()
+    response_text = "📋 <b>Задание на текущую неделю:</b>\n\n"
+
+    if bot_week_quest:
+        response_text += f"{bot_week_quest.quest}\n\n"
+    else:
+        response_text += "Задание на неделю еще не выставлено."
+
+    await callback.message.edit_text(text=response_text, reply_markup=kb.back5, parse_mode='HTML')
 
 
 @router.message(F.video | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,

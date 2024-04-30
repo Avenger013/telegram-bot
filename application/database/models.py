@@ -121,6 +121,13 @@ class InfoBot(Base):
     instruction: Mapped[str | None] = mapped_column()
 
 
+class TasksForTheWeek(Base):
+    __tablename__: str = 'tasks_for_the_weeks'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    quest: Mapped[str | None] = mapped_column()
+
+
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

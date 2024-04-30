@@ -1,7 +1,8 @@
+from datetime import datetime
 from sqlalchemy import select, update, func, extract
 
 from application.database.models import Teacher, Student, Administrator, Password, PointsHistory, StudentTeacher, \
-    MonetizationSystem, PointsExchange, SupportInfo, InfoBot, async_session
+    MonetizationSystem, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, async_session
 
 
 async def get_teachers():
@@ -34,6 +35,19 @@ async def get_info():
     async with async_session() as session:
         result = await session.scalars(select(InfoBot))
         return result
+
+
+async def get_tasks_for_the_week():
+    today = datetime.now().date()
+    start_of_year = datetime(today.year, month=1, day=1).date()
+    days_since_start = (today - start_of_year).days
+    current_week = days_since_start // 7
+
+    async with async_session() as session:
+        total_tasks = await session.scalar(select(func.count()).select_from(TasksForTheWeek))
+        task_index = current_week % total_tasks if total_tasks > 0 else 0
+        result = await session.scalars(select(TasksForTheWeek).offset(task_index).limit(1))
+        return result.first()
 
 
 async def get_support():
