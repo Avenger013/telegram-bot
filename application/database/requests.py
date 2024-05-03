@@ -100,24 +100,6 @@ async def get_student(session, tg_id):
         return None
 
 
-# async def update_student_info(session, tg_id, new_name, new_last_name, new_phone, new_teacher_id):
-#     try:
-#         await session.execute(
-#             update(Student)
-#             .where(Student.tg_id == tg_id)
-#             .values(
-#                 name=new_name,
-#                 last_name=new_last_name,
-#                 phone=new_phone,
-#                 teacher_id=new_teacher_id
-#             )
-#         )
-#         await session.commit()
-#     except Exception as e:
-#         print(f"Error in update_student_info: {e}")
-#         await session.rollback()
-
-
 async def update_student_points(session, student_id, new_points):
     try:
         await session.execute(

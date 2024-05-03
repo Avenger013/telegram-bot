@@ -1,6 +1,4 @@
-from datetime import datetime
-
-from sqlalchemy import BigInteger, ForeignKey
+from sqlalchemy import BigInteger, ForeignKey, Date
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy import Text, DateTime, LargeBinary
@@ -41,6 +39,7 @@ class Student(Base):
     homeworks = relationship(argument='Homework', back_populates='student')
     points_history = relationship(argument='PointsHistory', back_populates='student')
     teachers = relationship(argument='Teacher', secondary='student_teacher', back_populates='students')
+    daily_check_ins = relationship(argument='DailyCheckIn', back_populates='student')
 
 
 class StudentTeacher(Base):
@@ -126,6 +125,17 @@ class TasksForTheWeek(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     quest: Mapped[str | None] = mapped_column()
+
+
+class DailyCheckIn(Base):
+    __tablename__ = 'daily_check_ins'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey('students.id'))
+    check_in_count: Mapped[int] = mapped_column(default=1)
+    date = mapped_column(Date)
+
+    student = relationship(argument='Student', back_populates='daily_check_ins')
 
 
 async def async_main():
