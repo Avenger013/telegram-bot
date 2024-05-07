@@ -76,6 +76,15 @@ async def get_users():
         return users
 
 
+async def get_users_by_ids(ids=None):
+    async with async_session() as session:
+        query = select(Student)
+        if ids is not None:
+            query = query.where(Student.id.in_(ids))
+        users = await session.scalars(query)
+        return users
+
+
 async def get_student_info(session, tg_id):
     try:
         student = await session.scalar(select(Student).filter(Student.tg_id == tg_id))

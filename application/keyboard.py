@@ -1,7 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton, InlineKeyboardMarkup
 from application.database.requests import get_teachers, get_teachers_vocal, get_teachers_guitar, get_gifts, get_money, \
-    get_student, get_teachers1
+    get_student, get_teachers1, get_users_by_ids
 from application.database.models import async_session
 from application.routers.lk_and_commands import get_points_word
 
@@ -640,3 +640,13 @@ async def choosing_a_money(selected_ids=[]):
         choosing_a_money_kb.add(InlineKeyboardButton(text="🎯 Подтвердить", callback_data='on_selecting'))
         choosing_a_money_kb.add(InlineKeyboardButton(text="◀️ Вернуться", callback_data='comeback'))
     return choosing_a_money_kb.adjust(2).as_markup()
+
+
+async def students_choice(student_ids, teacher_id):
+    students_choice_kb = InlineKeyboardBuilder()
+    students_choice = await get_users_by_ids(student_ids)
+
+    for student in students_choice:
+        full_name = f'{student.name} {student.last_name}'
+        students_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'student_{student.id}_{teacher_id}'))
+    return students_choice_kb.adjust(2).as_markup()

@@ -202,7 +202,7 @@ async def confirm_homework_photo(callback: CallbackQuery, state: FSMContext, bot
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        timestamp = datetime.datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+        timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
         filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_photo.jpg"
 
         await bot.download_file(file_path, filename)
@@ -261,7 +261,7 @@ async def confirm_homework_video(callback: CallbackQuery, state: FSMContext, bot
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-            timestamp = datetime.datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+            timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
             filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_video.mp4"
 
             await bot.download_file(file_path, filename)
@@ -359,7 +359,7 @@ async def confirm_homework_text(callback: CallbackQuery, state: FSMContext):
                 return
 
         full_name = f'{student.name} {student.last_name}'
-        timestamp = datetime.datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+        timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
         links = find_links(text)
 
         if links:
@@ -428,7 +428,7 @@ async def confirm_homework_voice(callback: CallbackQuery, state: FSMContext, bot
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        timestamp = datetime.datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+        timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
         filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_voice.ogg"
 
         await bot.download_file(file_path, filename)
@@ -527,7 +527,7 @@ async def confirm_homework_video_2(callback: CallbackQuery, state: FSMContext, b
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-            timestamp = datetime.datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+            timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
             filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_video.mp4"
 
             await bot.download_file(file_path, filename)
@@ -586,7 +586,7 @@ async def confirm_homework_text_2(callback: CallbackQuery, state: FSMContext):
                 return
 
         full_name = f'{student.name} {student.last_name}'
-        timestamp = datetime.datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+        timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
         links = find_links(text)
 
         if links:
