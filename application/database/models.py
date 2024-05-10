@@ -1,7 +1,7 @@
 from sqlalchemy import BigInteger, ForeignKey, Date
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
-from sqlalchemy import Text, DateTime, LargeBinary
+from sqlalchemy import DateTime
 
 from config import SQLALCHEMY_URL
 
@@ -21,8 +21,10 @@ class Teacher(Base):
     name: Mapped[str] = mapped_column()
     last_name: Mapped[str] = mapped_column()
     specialisation: Mapped[str] = mapped_column()
+    password_teacher: Mapped[str] = mapped_column()
 
     students = relationship(argument='Student', secondary='student_teacher', back_populates='teachers')
+    homeworks = relationship(argument='Homework', back_populates='teacher')
 
 
 class Student(Base):
@@ -54,14 +56,13 @@ class Homework(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     student_id: Mapped[int] = mapped_column(ForeignKey('students.id'))
-    text_submission = mapped_column(Text)
-    photo_submission = mapped_column(LargeBinary)
-    video_submission = mapped_column(LargeBinary)
-    audio_submission = mapped_column(LargeBinary)
-    link_submission: Mapped[str | None] = mapped_column()
+    teacher_id: Mapped[int] = mapped_column(ForeignKey('teachers.id'))
+    file_hash: Mapped[str | None] = mapped_column()
+    file_type: Mapped[str | None] = mapped_column()
     submission_time = mapped_column(DateTime)
-    # submission_time = Mapped[datetime.datetime] = mapped_column(server_default=text("TIMEZONE('utc', now()"))
+
     student = relationship(argument='Student', back_populates='homeworks')
+    teacher = relationship(argument='Teacher', back_populates='homeworks')
 
 
 class PointsHistory(Base):

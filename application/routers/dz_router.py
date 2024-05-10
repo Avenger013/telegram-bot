@@ -1,6 +1,7 @@
 import os
 import re
 import datetime
+import hashlib
 
 from datetime import datetime
 from aiogram import Router, F, Bot
@@ -11,7 +12,7 @@ from sqlalchemy import select, and_
 from aiogram.exceptions import TelegramBadRequest
 
 from application.states import HomeworkState, HomeworkState2
-from application.database.models import Student, DailyCheckIn, async_session
+from application.database.models import Student, DailyCheckIn, Homework, async_session
 from application.database.requests import get_student, get_tasks_for_the_week
 
 import application.keyboard as kb
@@ -177,6 +178,11 @@ async def receive_homework_photo(message: Message, state: FSMContext):
     await message.answer(text="🧐Всё верно? Окончательно отправить?", reply_markup=kb.confirmation)
 
 
+async def generate_hash_2(file_path):
+    filename = os.path.basename(file_path)
+    return hashlib.md5(filename.encode()).hexdigest()
+
+
 @router.callback_query(F.data.in_(['confirm', 'change']), HomeworkState.WaitingForPhoto)
 async def confirm_homework_photo(callback: CallbackQuery, state: FSMContext, bot: Bot):
     call_data = callback.data
@@ -206,6 +212,20 @@ async def confirm_homework_photo(callback: CallbackQuery, state: FSMContext, bot
         filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_photo.jpg"
 
         await bot.download_file(file_path, filename)
+
+        file_hash = await generate_hash_2(filename)
+
+        async with async_session() as session:
+            new_homework = Homework(
+                student_id=student_id,
+                teacher_id=teacher_id,
+                file_hash=file_hash,
+                file_type='photo',
+                submission_time=datetime.utcnow()
+            )
+            session.add(new_homework)
+            await session.commit()
+
         await callback.message.answer(text="✅Домашнее задание (фото) успешно отправлено!", reply_markup=kb.menu)
         await state.clear()
     elif call_data == 'change':

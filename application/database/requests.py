@@ -1,8 +1,9 @@
 from datetime import datetime
 from sqlalchemy import select, update, func, extract
+from sqlalchemy.orm import selectinload
 
 from application.database.models import Teacher, Student, Administrator, Password, PointsHistory, StudentTeacher, \
-    MonetizationSystem, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, DailyCheckIn, async_session
+    MonetizationSystem, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, DailyCheckIn, Homework, async_session
 
 
 async def get_teachers():
@@ -117,6 +118,28 @@ async def get_student(session, tg_id):
     except Exception as e:
         print(f"Error in get_student: {e}")
         return None
+
+
+# async def get_homework_by_file_hash(session, file_hash):
+#     return await session.scalar(
+#         select(Homework)
+#         .where(Homework.file_hash == file_hash)
+#     )
+#
+#
+# async def get_students_by_homework(student_id: int):
+#     async with async_session() as session:
+#         result = await session.scalars(
+#             select(Student).join(Homework).where(Homework.student_id == student_id)
+#         )
+#         return result.all()
+#
+#
+# async def get_homework_by_file_hash_2(session, file_hash):
+#     result = await session.execute(
+#         select(Homework).options(selectinload(Homework.student)).where(Homework.file_hash == file_hash)
+#     )
+#     return result.scalar_one_or_none()
 
 
 async def update_student_points(session, student_id, new_points):
