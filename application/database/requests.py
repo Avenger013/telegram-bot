@@ -120,26 +120,24 @@ async def get_student(session, tg_id):
         return None
 
 
-# async def get_homework_by_file_hash(session, file_hash):
-#     return await session.scalar(
-#         select(Homework)
-#         .where(Homework.file_hash == file_hash)
-#     )
-#
-#
-# async def get_students_by_homework(student_id: int):
-#     async with async_session() as session:
-#         result = await session.scalars(
-#             select(Student).join(Homework).where(Homework.student_id == student_id)
-#         )
-#         return result.all()
-#
-#
-# async def get_homework_by_file_hash_2(session, file_hash):
-#     result = await session.execute(
-#         select(Homework).options(selectinload(Homework.student)).where(Homework.file_hash == file_hash)
-#     )
-#     return result.scalar_one_or_none()
+async def get_homework_with_details(session, file_hash):
+    try:
+        result = await session.execute(
+            select(Homework)
+            .options(selectinload(Homework.student))
+            .where(Homework.file_hash == file_hash)
+        )
+        homework = result.scalar_one_or_none()
+
+        if homework:
+            student = homework.student
+            return homework, student
+        else:
+            return None, None, None
+
+    except Exception as e:
+        print(f"Error in get_homework_with_details: {e}")
+        return None, None, None
 
 
 async def update_student_points(session, student_id, new_points):

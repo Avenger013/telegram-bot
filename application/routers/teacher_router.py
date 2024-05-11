@@ -11,12 +11,14 @@ from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 
 from application.states import PasswordCheck
-from application.database.requests import get_teacher_password, get_homework_by_file_hash_2
+from application.database.requests import get_teacher_password, get_homework_with_details
 from application.database.models import async_session
 
 import application.keyboard as kb
 
 router = Router(name=__name__)
+
+file_hash_map = {}
 
 
 @router.message(Command('teacher'))
@@ -77,7 +79,9 @@ async def teacher_selected(callback: CallbackQuery):
 
 async def generate_hash(file_path):
     filename = os.path.basename(file_path)
-    return hashlib.md5(filename.encode()).hexdigest()
+    file_hash = hashlib.md5(filename.encode()).hexdigest()
+    file_hash_map[file_hash] = file_path
+    return file_hash
 
 
 @router.callback_query(F.data.startswith('student_'))
@@ -112,34 +116,72 @@ async def student_files(callback: CallbackQuery, bot: Bot):
             await bot.send_document(chat_id=callback.from_user.id, document=file_input, reply_markup=keyboard)
 
     if not files_found:
-        await callback.message.answer("Для этого ученика нет отправленных домашних заданий.")
+        await callback.message.answer("У этого ученика нет отправленных домашних заданий.")
 
 
-# @router.callback_query(F.data.startswith('accept_'))
-# async def accept_homework(callback: CallbackQuery):
-#     file_hash = callback.data.split('_', 1)[1]
-#
-#     async with async_session() as session:
-#         homework = await get_homework_by_file_hash_2(session, file_hash)
-#         if not homework:
-#             await callback.answer(text="Домашнее задание не найдено.", show_alert=True)
-#             return
-#
-#         student = homework.student
-#         if not student:
-#             await callback.answer(text="Студент не найден.", show_alert=True)
-#             return
-#
-#         student.point = (student.point or 0) + 3
-#         await session.commit()
-#         await callback.answer(text=f"Очки успешно добавлены. Текущий балл студента: {student.point}.", show_alert=True)
-#
-#         await callback.message.edit_reply_markup()
+@router.callback_query(F.data.startswith('accept_'))
+async def accept_homework(callback: CallbackQuery):
+    file_hash = callback.data.split('_', 1)[1]
+
+    async with async_session() as session:
+        homework, student = await get_homework_with_details(session, file_hash)
+
+        if not homework:
+            await callback.answer(text="Домашнее задание не найдено.", show_alert=True)
+            return
+
+        if not student:
+            await callback.answer(text="Студент не найден.", show_alert=True)
+            return
+
+        student.point = (student.point or 0) + 3
+
+        await session.delete(homework)
+        await session.commit()
+
+        file_path = file_hash_map.get(file_hash)
+        if file_path and os.path.exists(file_path):
+            os.remove(file_path)
+
+    updated_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Проверено", callback_data=f'checked_{file_hash}')]
+    ])
+
+    await callback.message.edit_reply_markup(reply_markup=updated_keyboard)
 
 
 @router.callback_query(F.data.startswith('decline_'))
 async def decline_homework(callback: CallbackQuery):
-    pass
+    file_hash = callback.data.split('_', 1)[1]
+
+    async with async_session() as session:
+        homework, student = await get_homework_with_details(session, file_hash)
+
+        if not homework:
+            await callback.answer(text="Домашнее задание не найдено.", show_alert=True)
+            return
+
+        if not student:
+            await callback.answer(text="Студент не найден.", show_alert=True)
+            return
+
+        await session.delete(homework)
+        await session.commit()
+
+        file_path = file_hash_map.get(file_hash)
+        if file_path and os.path.exists(file_path):
+            os.remove(file_path)
+
+    updated_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Проверено", callback_data=f'checked_{file_hash}')]
+    ])
+
+    await callback.message.edit_reply_markup(reply_markup=updated_keyboard)
+
+
+@router.callback_query(F.data.startswith('checked_'))
+async def checked_homework(callback: CallbackQuery):
+    await callback.answer(text="Это домашнее задание уже проверено.", show_alert=True)
 
 
 @router.callback_query(F.data.startswith('feedback_'))

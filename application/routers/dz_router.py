@@ -285,17 +285,32 @@ async def confirm_homework_video(callback: CallbackQuery, state: FSMContext, bot
             filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_video.mp4"
 
             await bot.download_file(file_path, filename)
+
+            file_hash = await generate_hash_2(filename)
+
+            async with async_session() as session:
+                new_homework = Homework(
+                    student_id=student_id,
+                    teacher_id=teacher_id,
+                    file_hash=file_hash,
+                    file_type='video',
+                    submission_time=datetime.utcnow()
+                )
+                session.add(new_homework)
+                await session.commit()
+
             await callback.message.answer(text="✅Домашнее задание (видео) успешно отправлено!", reply_markup=kb.menu)
             await state.clear()
         except TelegramBadRequest as e:
             if "file is too big" in str(e):
                 text = (
-                    "<b>✉️Ошибка!</b>\n\n"
+                    "✉️<b>Ошибка!</b>\n\n"
                     "😔Извините, ваше видео слишком много весит (максимум 50 МБ)!\n"
                     "├ Попробуйте начать заново, выбрав отправку в виде ссылки.\n"
                     "├ Или отправьте другое видео, меньшего размера."
                 )
-                await callback.message.edit_text(text=text, reply_markup=kb.inline_keyboard_error_video)
+                await callback.message.edit_text(text=text, reply_markup=kb.inline_keyboard_error_video,
+                                                 parse_mode='HTML')
             else:
                 await callback.message.answer(text="😔Произошла ошибка при отправке видео.", reply_markup=kb.menu1)
     elif call_data == 'deo_change':
@@ -386,12 +401,40 @@ async def confirm_homework_text(callback: CallbackQuery, state: FSMContext):
             directory_links = "application/media/links"
             filename_links = f"{directory_links}/{teacher_id}_{student_id}_{full_name}_{timestamp}_links.html"
             await save_homework_with_links(directory_links, filename_links, links)
+
+            file_hash = await generate_hash_2(filename_links)
+
+            async with async_session() as session:
+                new_homework = Homework(
+                    student_id=student_id,
+                    teacher_id=teacher_id,
+                    file_hash=file_hash,
+                    file_type='links',
+                    submission_time=datetime.utcnow()
+                )
+                session.add(new_homework)
+                await session.commit()
+
             response_message = "✅Домашнее задание (ссылка) успешно отправлено!"
         else:
             text_content = format_text(text)
             directory = "application/media/text"
             filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_text.txt"
             await save_homework_text(directory, filename, text_content)
+
+            file_hash = await generate_hash_2(filename)
+
+            async with async_session() as session:
+                new_homework = Homework(
+                    student_id=student_id,
+                    teacher_id=teacher_id,
+                    file_hash=file_hash,
+                    file_type='text',
+                    submission_time=datetime.utcnow()
+                )
+                session.add(new_homework)
+                await session.commit()
+
             response_message = "✅Домашнее задание (текст) успешно отправлено!"
 
         await callback.message.answer(text=response_message, reply_markup=kb.menu)
@@ -452,6 +495,20 @@ async def confirm_homework_voice(callback: CallbackQuery, state: FSMContext, bot
         filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_voice.ogg"
 
         await bot.download_file(file_path, filename)
+
+        file_hash = await generate_hash_2(filename)
+
+        async with async_session() as session:
+            new_homework = Homework(
+                student_id=student_id,
+                teacher_id=teacher_id,
+                file_hash=file_hash,
+                file_type='voice',
+                submission_time=datetime.utcnow()
+            )
+            session.add(new_homework)
+            await session.commit()
+
         await callback.message.answer(text="✅Домашнее задание (голосовое сообщение) успешно отправлено!",
                                       reply_markup=kb.menu)
         await state.clear()
