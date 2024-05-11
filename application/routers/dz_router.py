@@ -638,8 +638,11 @@ async def check_in_homework(callback: CallbackQuery):
         daily_check_in = daily_check_in.scalars().first()
 
         if daily_check_in:
-            await callback.message.edit_text(text="Вы уже отметились сегодня, не забудьте отметиться завтра!",
-                                             reply_markup=kb.back3)
+            daily_check_in_text = (
+                "Вы уже отметились сегодня, не забудьте отметиться завтра!"
+                f"Ваше текущее количество отметок: {daily_check_in.check_in_count}"
+            )
+            await callback.message.edit_text(text=daily_check_in_text, reply_markup=kb.back3)
             return
 
         last_check_in = await session.execute(
@@ -660,10 +663,15 @@ async def check_in_homework(callback: CallbackQuery):
             if last_check_in.check_in_count >= 7:
                 student.point = student.point + 1 if student.point else 1
                 last_check_in.check_in_count = 0
-                await callback.message.edit_text(
-                    text="Поздравляем! Вы набрали 7 отметок и получили дополнительный балл.", reply_markup=kb.back3)
+                last_check_in_text = (
+                    "Поздравляем! Вы набрали 7 отметок и получили <b>+1 балл</b>.\n"
+                    "Количество баллов можно посмотреть в <b>личном кабинете!</b>"
+                )
+                await callback.message.edit_text(text=last_check_in_text, parse_mode='HTML', reply_markup=kb.back3)
             else:
-                await callback.message.edit_text(text="Отметка успешно учтена!", reply_markup=kb.back3)
+                await callback.message.edit_text(
+                    text=f"Отметка успешно учтена! Ваше текущее количество отметок: {daily_check_in.check_in_count}",
+                    reply_markup=kb.back3)
 
             await session.commit()
         else:

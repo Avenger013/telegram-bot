@@ -131,7 +131,7 @@ class DailyCheckIn(Base):
     __tablename__ = 'daily_check_ins'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    student_id: Mapped[int] = mapped_column(ForeignKey('students.id'))
+    student_id: Mapped[int] = mapped_column(ForeignKey('students.id'), unique=True)
     check_in_count: Mapped[int] = mapped_column(default=1)
     date = mapped_column(Date)
 
