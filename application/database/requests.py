@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import select, update, func, extract
 
 from application.database.models import Teacher, Student, Administrator, Password, PointsHistory, StudentTeacher, \
-    MonetizationSystem, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, async_session
+    MonetizationSystem, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, DailyCheckIn, async_session
 
 
 async def get_teachers():
@@ -83,12 +83,22 @@ async def get_student_info(session, tg_id):
             teacher_result = await session.execute(
                 select(Teacher).join(StudentTeacher).filter(StudentTeacher.student_id == student.id))
             teachers = teacher_result.scalars().all()
-            return student, teachers
+
+            last_check_in_record = await session.execute(
+                select(DailyCheckIn)
+                .where(DailyCheckIn.student_id == student.id)
+                .order_by(DailyCheckIn.date.desc())
+                .limit(1)
+            )
+            last_check_in = last_check_in_record.scalars().first()
+            check_in_count = last_check_in.check_in_count if last_check_in else 0
+
+            return student, teachers, check_in_count
         else:
-            return None, []
+            return None, [], 0
     except Exception as e:
         print(f"Error in get_student_info: {e}")
-        return None, []
+        return None, [], 0
 
 
 async def get_student(session, tg_id):

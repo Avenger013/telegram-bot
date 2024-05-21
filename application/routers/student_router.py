@@ -212,7 +212,7 @@ async def teacher_selected_students(callback: CallbackQuery, state: FSMContext):
 async def change_inline_keyboard(callback: CallbackQuery):
     tg_id = callback.from_user.id
     async with async_session() as session:
-        student, teachers = await get_student_info(session, tg_id)
+        student, teachers, check_in_count = await get_student_info(session, tg_id)
 
         if student:
             teacher_word = "Преподаватель" if len(teachers) == 1 else "Преподаватели"
@@ -233,7 +233,7 @@ async def cancel_update_info(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     tg_id = callback.from_user.id
     async with async_session() as session:
-        student, teachers = await get_student_info(session, tg_id)
+        student, teachers, check_in_count = await get_student_info(session, tg_id)
 
         if student:
             teacher_word = "Преподаватель" if len(teachers) == 1 else "Преподаватели"

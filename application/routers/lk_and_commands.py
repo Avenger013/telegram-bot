@@ -20,7 +20,7 @@ router = Router(name=__name__)
 async def personal_area(message: Message):
     tg_id = message.from_user.id
     async with async_session() as session:
-        student, teachers = await get_student_info(session, tg_id)
+        student, teachers, check_in_count = await get_student_info(session, tg_id)
 
         if student:
             student_name = student.name
@@ -44,6 +44,7 @@ async def personal_area(message: Message):
 
             response += f"🎓{teacher_word}: {teachers_info}\n"
             response += f"\n🧮Количество баллов: {point}\n"
+            response += f"📌Количество отметок: {check_in_count}\n"
             response += "\nСистему получения баллов и то, на что их можно обменять, вы найдете в разделе 🎁Монетизация"
 
             await message.answer(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area)
@@ -59,7 +60,7 @@ async def personal_area(message: Message):
 async def call_back(callback: CallbackQuery):
     tg_id = callback.from_user.id
     async with async_session() as session:
-        student, teachers = await get_student_info(session, tg_id)
+        student, teachers, check_in_count = await get_student_info(session, tg_id)
 
         if student:
             student_name = student.name
@@ -83,6 +84,7 @@ async def call_back(callback: CallbackQuery):
 
             response += f"🎓{teacher_word}: {teachers_info}\n"
             response += f"\n🧮Количество баллов: {point}\n"
+            response += f"📌Количество отметок: {check_in_count}\n"
             response += "\nСистему получения баллов и то, на что их можно обменять, вы найдете в разделе 🎁Монетизация"
 
             await callback.message.edit_text(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area)
