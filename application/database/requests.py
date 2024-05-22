@@ -141,6 +141,38 @@ async def get_homework_with_details(session, file_hash):
         return None, None, None
 
 
+async def get_student_by_id(session, student_id):
+    try:
+        student = await session.scalar(select(Student).where(Student.id == student_id))
+        return student
+    except Exception as e:
+        print(f"Error in get_student_by_id: {e}")
+        return None
+
+
+async def get_teacher_by_id(session, teacher_id):
+    try:
+        teacher = await session.scalar(select(Teacher).where(Teacher.id == teacher_id))
+        return teacher
+    except Exception as e:
+        print(f"Error in get_teacher_by_id: {e}")
+        return None
+
+
+async def get_homework_by_file_hash(session, file_hash):
+    try:
+        result = await session.execute(
+            select(Homework)
+            .options(selectinload(Homework.student))
+            .where(Homework.file_hash == file_hash)
+        )
+        homework = result.scalar_one_or_none()
+        return homework
+    except Exception as e:
+        print(f"Error in get_homework_by_file_hash: {e}")
+        return None
+
+
 async def update_student_points(session, student_id, new_points):
     try:
         await session.execute(
@@ -151,6 +183,19 @@ async def update_student_points(session, student_id, new_points):
         await session.commit()
     except Exception as e:
         print(f"Error in update_student_points: {e}")
+        await session.rollback()
+
+
+async def update_feedback_sent(session, homework_id):
+    try:
+        await session.execute(
+            update(Homework)
+            .where(Homework.id == homework_id)
+            .values(feedback_sent=Homework.feedback_sent + 1)
+        )
+        await session.commit()
+    except Exception as e:
+        print(f"Error in update_feedback_sent: {e}")
         await session.rollback()
 
 
@@ -197,12 +242,6 @@ async def add_administrator(admin_tg_id: int):
         new_admin = Administrator(administrator_tg_id=admin_tg_id)
         session.add(new_admin)
         await session.commit()
-
-
-# async def get_teacher_password() -> str:
-#     async with async_session() as session:
-#         result = await session.scalar(select(Password.password_teacher))
-#         return result
 
 
 async def get_teacher_by_password(input_password: str) -> Optional[Teacher]:

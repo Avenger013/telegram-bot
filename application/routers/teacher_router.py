@@ -12,8 +12,9 @@ from aiogram.types import ReplyKeyboardRemove
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup, InlineKeyboardBuilder
 
-from application.states import PasswordCheck
-from application.database.requests import get_homework_with_details, get_teacher_by_password, get_users_by_ids
+from application.states import PasswordCheck, FeedbackState
+from application.database.requests import get_homework_with_details, get_teacher_by_password, get_users_by_ids, \
+    get_student_by_id, get_homework_by_file_hash, get_teacher_by_id, update_feedback_sent
 from application.database.models import PointsHistory, async_session
 
 router = Router(name=__name__)
@@ -139,6 +140,11 @@ async def accept_homework(callback: CallbackQuery):
             await callback.answer(text="Студент не найден.", show_alert=True)
             return
 
+        if not homework.feedback_sent:
+            await callback.answer(text="Необходимо отправить обратную связь перед принятием домашнего задания.",
+                                  show_alert=True)
+            return
+
         points_to_add = 3
         student.point = (student.point or 0) + points_to_add
 
@@ -174,6 +180,11 @@ async def decline_homework(callback: CallbackQuery):
             await callback.answer(text="Студент не найден.", show_alert=True)
             return
 
+        if not homework.feedback_sent:
+            await callback.answer(text="Необходимо отправить обратную связь перед отклонением домашнего задания.",
+                                  show_alert=True)
+            return
+
         await session.delete(homework)
         await session.commit()
 
@@ -199,5 +210,80 @@ async def checked_homework(callback: CallbackQuery):
 
 
 @router.callback_query(F.data.startswith('feedback_'))
-async def feedback_homework(callback: CallbackQuery):
-    pass
+async def feedback_homework(callback: CallbackQuery, state: FSMContext):
+    file_hash = callback.data.split('_', 1)[1]
+
+    async with async_session() as session:
+        homework = await get_homework_by_file_hash(session, file_hash)
+        if not homework:
+            await callback.message.answer("Домашнее задание не найдено.")
+            return
+
+        student = await get_student_by_id(session, homework.student_id)
+        if not student:
+            await callback.message.answer("Студент не найден.")
+            return
+
+        teacher = await get_teacher_by_id(session, homework.teacher_id)
+        if not teacher:
+            await callback.message.answer("Преподаватель не найден.")
+            return
+
+        teacher_full_name = f'{teacher.name} {teacher.last_name}'
+
+        await state.update_data(student_tg_id=student.tg_id, teacher_full_name=teacher_full_name,
+                                homework_id=homework.id)
+        await state.set_state(FeedbackState.WaitingForText)
+
+        cancel_button = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="Отмена отправки", callback_data="car_feedback")]
+            ]
+        )
+
+        await callback.message.answer(text="Введите текст обратной связи для студента:", reply_markup=cancel_button)
+
+    await callback.answer()
+
+
+@router.message(F.text, FeedbackState.WaitingForText)
+async def receive_feedback_text(message: Message, state: FSMContext, bot: Bot):
+    feedback_text = message.text
+    data = await state.get_data()
+    student_tg_id = data.get('student_tg_id')
+    teacher_full_name = data.get('teacher_full_name')
+    homework_id = data.get('homework_id')
+
+    text = (
+        f"📬 У вас новая обратная связь: {feedback_text}.\n\n"
+        f"Преподаватель: {teacher_full_name}."
+    )
+
+    try:
+        await bot.send_message(chat_id=student_tg_id, text=text)
+        await message.answer(text="Обратная связь отправлена студенту.")
+
+        async with async_session() as session:
+            await update_feedback_sent(session, homework_id)
+
+    except Exception as e:
+        await message.answer(text=f"Не удалось отправить сообщение студенту: {e}")
+
+    await state.clear()
+
+
+@router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
+                FeedbackState.WaitingForText)
+async def wrong_type_for_text(message: Message):
+    await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидался текст). Попробуйте еще раз.")
+
+
+@router.callback_query(F.data.startswith('car_feedback'), FeedbackState.WaitingForText)
+async def checked_homework(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.edit_text(text="Отправка обратной связи отменена.", reply_markup=None)
+
+
+@router.callback_query(F.data.startswith('car'))
+async def checked_homework(callback: CallbackQuery):
+    await callback.answer(text="Отмена недоступна.", show_alert=True)

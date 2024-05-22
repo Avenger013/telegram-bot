@@ -59,3 +59,7 @@ class Gifts(StatesGroup):
 
 class Systems(StatesGroup):
     System = State()
+
+
+class FeedbackState(StatesGroup):
+    WaitingForText = State()
