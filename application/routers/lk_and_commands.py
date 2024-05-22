@@ -44,7 +44,7 @@ async def personal_area(message: Message):
 
             response += f"🎓{teacher_word}: {teachers_info}\n"
             response += f"\n🧮Количество баллов: {point}\n"
-            response += f"📌Количество отметок: {check_in_count}\n"
+            response += f"📌Количество отметок за текущую неделю: {check_in_count}\n"
             response += "\nСистему получения баллов и то, на что их можно обменять, вы найдете в разделе 🎁Монетизация"
 
             await message.answer(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area)
@@ -84,7 +84,7 @@ async def call_back(callback: CallbackQuery):
 
             response += f"🎓{teacher_word}: {teachers_info}\n"
             response += f"\n🧮Количество баллов: {point}\n"
-            response += f"📌Количество отметок: {check_in_count}\n"
+            response += f"📌Количество отметок за текущую неделю: {check_in_count}\n"
             response += "\nСистему получения баллов и то, на что их можно обменять, вы найдете в разделе 🎁Монетизация"
 
             await callback.message.edit_text(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area)
