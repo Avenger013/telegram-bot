@@ -3,6 +3,8 @@ import re
 import hashlib
 import os
 
+from datetime import datetime
+
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.fsm.context import FSMContext
@@ -12,7 +14,7 @@ from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup, I
 
 from application.states import PasswordCheck
 from application.database.requests import get_homework_with_details, get_teacher_by_password, get_users_by_ids
-from application.database.models import async_session
+from application.database.models import PointsHistory, async_session
 
 router = Router(name=__name__)
 
@@ -23,27 +25,6 @@ file_hash_map = {}
 async def register_students(message: Message, state: FSMContext):
     await message.answer(text='Введите пароль:', reply_markup=ReplyKeyboardRemove())
     await state.set_state(PasswordCheck.EnterPassword)
-
-
-# @router.message(PasswordCheck.EnterPassword)
-# async def check_password(message: Message, state: FSMContext):
-#     commands = ['/profile', '/homework', '/top', '/leader', '/monetization', '/info', '/support', '/registration',
-#                 '/start', '/newsletter']
-#     input_text = message.text
-#
-#     if input_text in commands:
-#         await state.clear()
-#         await message.answer("Обнаружена команда. Пожалуйста, введите команду ещё раз.")
-#         return
-#
-#     input_password = message.text
-#     teacher_password = await get_teacher_password()
-#     if input_password == teacher_password:
-#         await message.answer('Пароль верен!')
-#         await message.answer(text='Выберите себя:', reply_markup=await kb.teachers_choice())
-#         await state.clear()
-#     else:
-#         await message.answer('🙈Извините, пароль не верен, попробуйте еще раз.')
 
 
 @router.message(PasswordCheck.EnterPassword)
@@ -99,35 +80,6 @@ async def students_choice(teacher_id: int) -> InlineKeyboardMarkup:
         full_name = f'{student.name} {student.last_name}'
         students_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'student_{student.id}_{teacher_id}'))
     return students_choice_kb.adjust(2).as_markup()
-
-
-# @router.callback_query(F.data.startswith('teacher_'))
-# async def teacher_selected(callback: CallbackQuery):
-#     teacher_id = callback.data.split('_')[1]
-#     directories = {
-#         "application/media/photo": "*.jpg",
-#         "application/media/text": "*.txt",
-#         "application/media/video": "*.mp4",
-#         "application/media/links": "*.html",
-#         "application/media/voice": "*.ogg",
-#     }
-#
-#     student_ids = set()
-#
-#     for directory, ext in directories.items():
-#         files = glob.glob(f"{directory}/{teacher_id}_*{ext}")
-#         for filename in files:
-#             match = re.search(rf"{teacher_id}_(\d+)_", filename)
-#             if match:
-#                 student_ids.add(match.group(1))
-#
-#     if not student_ids:
-#         await callback.message.answer("Для вас нет отправленных домашних заданий.")
-#         return
-#
-#     keyboard = await kb.students_choice(list(student_ids), teacher_id)
-#     await callback.message.answer(text="Выберите ученика, чтобы посмотреть его домашние задания:",
-#                                   reply_markup=keyboard)
 
 
 async def generate_hash(file_path):
@@ -187,7 +139,11 @@ async def accept_homework(callback: CallbackQuery):
             await callback.answer(text="Студент не найден.", show_alert=True)
             return
 
-        student.point = (student.point or 0) + 3
+        points_to_add = 3
+        student.point = (student.point or 0) + points_to_add
+
+        new_points_history = PointsHistory(student_id=student.id, points_added=points_to_add, date_added=datetime.now())
+        session.add(new_points_history)
 
         await session.delete(homework)
         await session.commit()

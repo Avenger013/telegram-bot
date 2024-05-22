@@ -12,7 +12,7 @@ from sqlalchemy import select, and_
 from aiogram.exceptions import TelegramBadRequest
 
 from application.states import HomeworkState, HomeworkState2
-from application.database.models import Student, DailyCheckIn, Homework, async_session
+from application.database.models import Student, DailyCheckIn, Homework, PointsHistory, async_session
 from application.database.requests import get_student, get_tasks_for_the_week
 
 import application.keyboard as kb
@@ -734,8 +734,14 @@ async def check_in_homework(callback: CallbackQuery):
             last_check_in.date = today
 
             if last_check_in.check_in_count >= 7:
-                student.point = student.point + 1 if student.point else 1
+                points_to_add = 1
+                student.point = (student.point or 0) + points_to_add
                 last_check_in.check_in_count = 0
+
+                new_points_history = PointsHistory(student_id=student.id, points_added=points_to_add,
+                                                   date_added=datetime.now())
+                session.add(new_points_history)
+
                 last_check_in_text = (
                     "Поздравляем! Вы набрали 7 отметок и получили <b>+1 балл</b>.\n"
                     "Количество баллов можно посмотреть в <b>личном кабинете!</b>"
