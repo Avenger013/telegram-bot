@@ -8,13 +8,11 @@ from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.filters import Command
-from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup, InlineKeyboardBuilder
 
 from application.states import PasswordCheck
-from application.database.requests import get_teacher_password, get_homework_with_details
+from application.database.requests import get_homework_with_details, get_teacher_by_password, get_users_by_ids
 from application.database.models import async_session
-
-import application.keyboard as kb
 
 router = Router(name=__name__)
 
@@ -25,6 +23,27 @@ file_hash_map = {}
 async def register_students(message: Message, state: FSMContext):
     await message.answer(text='Введите пароль:', reply_markup=ReplyKeyboardRemove())
     await state.set_state(PasswordCheck.EnterPassword)
+
+
+# @router.message(PasswordCheck.EnterPassword)
+# async def check_password(message: Message, state: FSMContext):
+#     commands = ['/profile', '/homework', '/top', '/leader', '/monetization', '/info', '/support', '/registration',
+#                 '/start', '/newsletter']
+#     input_text = message.text
+#
+#     if input_text in commands:
+#         await state.clear()
+#         await message.answer("Обнаружена команда. Пожалуйста, введите команду ещё раз.")
+#         return
+#
+#     input_password = message.text
+#     teacher_password = await get_teacher_password()
+#     if input_password == teacher_password:
+#         await message.answer('Пароль верен!')
+#         await message.answer(text='Выберите себя:', reply_markup=await kb.teachers_choice())
+#         await state.clear()
+#     else:
+#         await message.answer('🙈Извините, пароль не верен, попробуйте еще раз.')
 
 
 @router.message(PasswordCheck.EnterPassword)
@@ -38,19 +57,20 @@ async def check_password(message: Message, state: FSMContext):
         await message.answer("Обнаружена команда. Пожалуйста, введите команду ещё раз.")
         return
 
-    input_password = message.text
-    teacher_password = await get_teacher_password()
-    if input_password == teacher_password:
-        await message.answer('Пароль верен!')
-        await message.answer(text='Выберите себя:', reply_markup=await kb.teachers_choice())
+    input_password = input_text.strip()
+    teacher = await get_teacher_by_password(input_password)
+
+    if teacher:
+        teacher_full_name = f'{teacher.name} {teacher.last_name}'
+        await message.answer(f'Пароль верен! Здравствуйте, {teacher_full_name}!')
+        keyboard = await students_choice(teacher.id)
+        await message.answer(text='Выберите ученика, чтобы посмотреть его домашние задания:', reply_markup=keyboard)
         await state.clear()
     else:
-        await message.answer('🙈Извините, пароль не верен, попробуйте еще раз.')
+        await message.answer('🙈 Извините, пароль не верен, попробуйте еще раз.')
 
 
-@router.callback_query(F.data.startswith('teacher_'))
-async def teacher_selected(callback: CallbackQuery):
-    teacher_id = callback.data.split('_')[1]
+async def students_choice(teacher_id: int) -> InlineKeyboardMarkup:
     directories = {
         "application/media/photo": "*.jpg",
         "application/media/text": "*.txt",
@@ -60,7 +80,6 @@ async def teacher_selected(callback: CallbackQuery):
     }
 
     student_ids = set()
-
     for directory, ext in directories.items():
         files = glob.glob(f"{directory}/{teacher_id}_*{ext}")
         for filename in files:
@@ -69,12 +88,46 @@ async def teacher_selected(callback: CallbackQuery):
                 student_ids.add(match.group(1))
 
     if not student_ids:
-        await callback.message.answer("Для вас нет отправленных домашних заданий.")
-        return
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Нет доступных домашних заданий", callback_data="no_homework")]
+        ])
+        return keyboard
 
-    keyboard = await kb.students_choice(list(student_ids), teacher_id)
-    await callback.message.answer(text="Выберите ученика, чтобы посмотреть его домашние задания:",
-                                  reply_markup=keyboard)
+    students_choice_kb = InlineKeyboardBuilder()
+    students = await get_users_by_ids(list(student_ids))
+    for student in students:
+        full_name = f'{student.name} {student.last_name}'
+        students_choice_kb.add(InlineKeyboardButton(text=full_name, callback_data=f'student_{student.id}_{teacher_id}'))
+    return students_choice_kb.adjust(2).as_markup()
+
+
+# @router.callback_query(F.data.startswith('teacher_'))
+# async def teacher_selected(callback: CallbackQuery):
+#     teacher_id = callback.data.split('_')[1]
+#     directories = {
+#         "application/media/photo": "*.jpg",
+#         "application/media/text": "*.txt",
+#         "application/media/video": "*.mp4",
+#         "application/media/links": "*.html",
+#         "application/media/voice": "*.ogg",
+#     }
+#
+#     student_ids = set()
+#
+#     for directory, ext in directories.items():
+#         files = glob.glob(f"{directory}/{teacher_id}_*{ext}")
+#         for filename in files:
+#             match = re.search(rf"{teacher_id}_(\d+)_", filename)
+#             if match:
+#                 student_ids.add(match.group(1))
+#
+#     if not student_ids:
+#         await callback.message.answer("Для вас нет отправленных домашних заданий.")
+#         return
+#
+#     keyboard = await kb.students_choice(list(student_ids), teacher_id)
+#     await callback.message.answer(text="Выберите ученика, чтобы посмотреть его домашние задания:",
+#                                   reply_markup=keyboard)
 
 
 async def generate_hash(file_path):
@@ -182,6 +235,11 @@ async def decline_homework(callback: CallbackQuery):
 @router.callback_query(F.data.startswith('checked_'))
 async def checked_homework(callback: CallbackQuery):
     await callback.answer(text="Это домашнее задание уже проверено.", show_alert=True)
+
+
+@router.callback_query(F.data.startswith('no_homework'))
+async def checked_homework(callback: CallbackQuery):
+    await callback.answer(text="Для вас нет заданий для проверки.", show_alert=True)
 
 
 @router.callback_query(F.data.startswith('feedback_'))

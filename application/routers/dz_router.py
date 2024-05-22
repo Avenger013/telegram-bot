@@ -743,8 +743,7 @@ async def check_in_homework(callback: CallbackQuery):
                 await callback.message.edit_text(text=last_check_in_text, parse_mode='HTML', reply_markup=kb.back3)
             else:
                 await callback.message.edit_text(
-                    text=f"Отметка успешно учтена! Ваше текущее количество отметок: {daily_check_in.check_in_count}",
-                    reply_markup=kb.back3)
+                    text="Отметка успешно учтена!", reply_markup=kb.back3)
 
             await session.commit()
         else:

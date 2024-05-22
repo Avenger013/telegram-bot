@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy import select, update, func, extract
 from sqlalchemy.orm import selectinload
+from typing import Optional
 
 from application.database.models import Teacher, Student, Administrator, Password, PointsHistory, StudentTeacher, \
     MonetizationSystem, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, DailyCheckIn, Homework, async_session
@@ -198,10 +199,16 @@ async def add_administrator(admin_tg_id: int):
         await session.commit()
 
 
-async def get_teacher_password() -> str:
+# async def get_teacher_password() -> str:
+#     async with async_session() as session:
+#         result = await session.scalar(select(Password.password_teacher))
+#         return result
+
+
+async def get_teacher_by_password(input_password: str) -> Optional[Teacher]:
     async with async_session() as session:
-        result = await session.scalar(select(Password.password_teacher))
-        return result
+        result = await session.execute(select(Teacher).where(Teacher.password_teacher == input_password))
+        return result.scalars().first()
 
 
 async def get_leader_of_the_month(year: int, month: int):
