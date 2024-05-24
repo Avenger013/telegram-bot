@@ -255,7 +255,7 @@ async def receive_feedback_text(message: Message, state: FSMContext, bot: Bot):
     homework_id = data.get('homework_id')
 
     text = (
-        f"📬 У вас новая обратная связь: {feedback_text}.\n\n"
+        f"📬 У вас новая обратная связь: {feedback_text}\n\n"
         f"🎓 Преподаватель: {teacher_full_name}."
     )
 

@@ -2,6 +2,7 @@ from sqlalchemy import BigInteger, ForeignKey, Date
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy import DateTime
+from datetime import datetime
 
 from config import SQLALCHEMY_URL
 
@@ -32,6 +33,7 @@ class Student(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id = mapped_column(BigInteger)
+    date_of_registration = mapped_column(DateTime, default=datetime.now())
     name: Mapped[str | None] = mapped_column()
     last_name: Mapped[str | None] = mapped_column()
     phone: Mapped[str | None] = mapped_column()

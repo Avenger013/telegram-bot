@@ -116,14 +116,13 @@ async def teacher_selected_students(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     selected_teachers = data.get('selected_teachers', [])
     if teacher_id in selected_teachers:
-        selected_teachers.remove(teacher_id)  # Удаляем, если уже выбран
+        selected_teachers.remove(teacher_id)
         await callback.answer("Преподаватель удален из списка выбранных.")
     else:
-        selected_teachers.append(teacher_id)  # Добавляем, если еще не выбран
+        selected_teachers.append(teacher_id)
         await callback.answer("Преподаватель добавлен в список выбранных.")
     await state.update_data(selected_teachers=selected_teachers)
 
-    # Обновляем клавиатуру, чтобы показать текущий выбор
     new_markup = await kb.teachers_choice_students_da(selected_teachers)
     await callback.message.edit_reply_markup(reply_markup=new_markup)
 
