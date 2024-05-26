@@ -10,5 +10,5 @@ router = Router(name=__name__)
 async def not_identified(message: Message):
     await message.answer(
         text='Извините, я вас не понимаю😔, попробуйте воспользоваться кнопками ниже или командами из <b>Меню</b>',
-        reply_markup=kb.menu1, parse_mode='HTML'
+        reply_markup=kb.menu1, parse_mode='HTML', protect_content=True
     )

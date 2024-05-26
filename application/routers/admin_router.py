@@ -21,10 +21,11 @@ async def admin(message: Message, state: FSMContext):
     admins_tg_id = await get_admin()
     if message.from_user.id in admins_tg_id:
         await state.set_state(Newsletter.Text)
-        await message.answer('Отправьте пост для рассылки по всем пользователям бота!')
+        await message.answer(text='Отправьте пост для рассылки по всем пользователям бота!', protect_content=True)
     else:
         await state.set_state(AdminVerification.Awaiting_password)
-        await message.answer('Извините, это команда только для админов. Если вы новый админ, введите пароль:')
+        await message.answer(text='Извините, это команда только для админов. Если вы новый админ, введите пароль:',
+                             protect_content=True)
 
 
 @router.message(AdminVerification.Awaiting_password)
@@ -36,10 +37,12 @@ async def admin_password_input(message: Message, state: FSMContext):
         await state.clear()
         await state.set_state(Newsletter.Text)
         await message.answer(
-            'Спасибо, вы добавлены. Теперь вы можете отправить пост для рассылки по всем пользователям бота!')
+            text='Спасибо, вы добавлены. Теперь вы можете отправить пост для рассылки по всем пользователям бота!',
+            protect_content=True)
     else:
         await state.clear()
-        await message.answer('Неверный пароль. Попробуйте еще раз или обратитесь к текущему админу за помощью.')
+        await message.answer(text='Неверный пароль. Попробуйте еще раз или обратитесь к текущему админу за помощью.',
+                             protect_content=True)
         await state.set_state(AdminVerification.Awaiting_password)
 
 
@@ -51,7 +54,7 @@ async def get_admin_text(message: Message, state: FSMContext, bot: Bot):
             await bot.send_message(chat_id=Student.tg_id, text=message.text)
         except Exception as e:
             print(f'User banned or error: {e}')
-    await message.answer('Текстовая рассылка завершена!')
+    await message.answer(text='Текстовая рассылка завершена!', protect_content=True)
     await state.clear()
 
 
@@ -65,5 +68,5 @@ async def get_admin_photo(message: Message, state: FSMContext, bot: Bot):
             await bot.send_photo(chat_id=Student.tg_id, photo=photo, caption=caption)
         except Exception as e:
             print(f'User banned or error: {e}')
-    await message.answer('Рассылка завершена!')
+    await message.answer(text='Рассылка завершена!', protect_content=True)
     await state.clear()

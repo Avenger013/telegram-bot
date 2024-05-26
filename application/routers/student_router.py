@@ -17,7 +17,8 @@ router = Router(name=__name__)
 
 @router.callback_query(F.data.startswith('registration'))
 async def register_students(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer(text='Введите ваш номер телефона (без +7 или 8 в начале):', reply_markup=kb.can)
+    await callback.message.answer(text='Введите ваш номер телефона (без +7 или 8 в начале):', reply_markup=kb.can,
+                                  protect_content=True)
     await callback.answer('')
     await state.set_state(RegistrationState.EnterPhone)
 
@@ -30,12 +31,12 @@ async def handle_register_students(message: Message, state: FSMContext):
         if student:
             await message.answer(
                 text='😁Вы уже зарегистрированы.🍾',
-                reply_markup=kb.menu
+                reply_markup=kb.menu, protect_content=True
             )
         else:
             await message.answer(
                 text='Начало регистрации. \nПожалуйста, введите ваш номер телефона (без +7 или 8 в начале):',
-                reply_markup=kb.can
+                reply_markup=kb.can, protect_content=True
             )
             await state.set_state(RegistrationState.EnterPhone)
 
@@ -47,13 +48,14 @@ async def enter_last_name(message: Message, state: FSMContext):
     if not raw_phone.isdigit() or len(raw_phone) != 10:
         await message.answer(text='''
             Неверный формат номера телефона. Пожалуйста, введите 10 цифр номера, без +7 или 8 в начале''',
-                             reply_markup=kb.can)
+                             reply_markup=kb.can, protect_content=True)
         return
 
     formatted_phone = f"+7 ({raw_phone[:3]}) {raw_phone[3:6]}-{raw_phone[6:8]}-{raw_phone[8:]}"
 
     await state.update_data(phone=formatted_phone)
-    await message.answer(text=f'Телефон {formatted_phone} сохранен! \nТеперь введите ваше имя:', reply_markup=kb.can)
+    await message.answer(text=f'Телефон {formatted_phone} сохранен! \nТеперь введите ваше имя:', reply_markup=kb.can,
+                         protect_content=True)
     await state.set_state(RegistrationState.EnterName)
 
 
@@ -63,11 +65,12 @@ async def enter_name(message: Message, state: FSMContext):
 
     if not name.isalpha():
         await message.answer(text='Имя должно содержать только буквы. Пожалуйста, введите ваше имя еще раз:',
-                             reply_markup=kb.can)
+                             reply_markup=kb.can, protect_content=True)
         return
 
     await state.update_data(name=name)
-    await message.answer(text=f'Отлично, {name}! \nТеперь введите вашу фамилию:', reply_markup=kb.can)
+    await message.answer(text=f'Отлично, {name}! \nТеперь введите вашу фамилию:', reply_markup=kb.can,
+                         protect_content=True)
     await state.set_state(RegistrationState.EnterLastName)
 
 
@@ -77,12 +80,12 @@ async def enter_last_name(message: Message, state: FSMContext):
 
     if not last_name.isalpha():
         await message.answer(text='Фамилия должна содержать только буквы. Пожалуйста, введите вашу фамилию еще раз:',
-                             reply_markup=kb.can)
+                             reply_markup=kb.can, protect_content=True)
         return
 
     await state.update_data(last_name=last_name)
     await message.answer(text=f'Фамилия {last_name} сохранена! \nТеперь выберите ваше направление:',
-                         reply_markup=kb.tool1)
+                         reply_markup=kb.tool1, protect_content=True)
     await state.set_state(RegistrationState.ChoiceSpecialisation)
 
 
@@ -105,7 +108,7 @@ async def process_specialisation(callback_query: CallbackQuery, state: FSMContex
 
     await callback_query.message.edit_text(
         text=f"Вы выбрали направление: {specialisation}. \nТеперь выберите своего преподавателя или преподавателей:",
-        reply_markup=reply_markup
+        reply_markup=reply_markup, protect_content=True
     )
     await state.set_state(RegistrationState.ChoiceIDTeacher)
 
@@ -203,7 +206,7 @@ async def teacher_selected_students(callback: CallbackQuery, state: FSMContext):
             session.add(new_student_teacher)
 
         await session.commit()
-        await callback.message.answer(text=message_text, reply_markup=kb.menu)
+        await callback.message.answer(text=message_text, reply_markup=kb.menu, protect_content=True)
         await state.clear()
 
 
@@ -224,7 +227,7 @@ async def change_inline_keyboard(callback: CallbackQuery):
                                                   f"Направление (🎤/🎸): {student.specialisation_student}\n"
                                                   f"{teacher_word} (🎓): {teachers_info}\n"
                                                   "\nВыберите, что вы хотите изменить:",
-                                             parse_mode="HTML", reply_markup=kb.updating_in_parts)
+                                             parse_mode="HTML", reply_markup=kb.updating_in_parts, protect_content=True)
 
 
 @router.callback_query(F.data.startswith('cell'))
@@ -245,13 +248,13 @@ async def cancel_update_info(callback: CallbackQuery, state: FSMContext):
                                                   f"Направление (🎤/🎸): {student.specialisation_student}\n"
                                                   f"{teacher_word} (🎓): {teachers_info}\n"
                                                   "\nВыберите, что вы хотите изменить:",
-                                             parse_mode="HTML", reply_markup=kb.updating_in_parts)
+                                             parse_mode="HTML", reply_markup=kb.updating_in_parts, protect_content=True)
 
 
 @router.callback_query(F.data.startswith('up_all'))
 async def update_info(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(text="Введите новый номер телефона (без +7 или 8 в начале):",
-                                  reply_markup=kb.can_update)
+                                  reply_markup=kb.can_update, protect_content=True)
     await state.set_state(UpdateRegistrationState.UpdatePhone)
 
 
@@ -262,14 +265,14 @@ async def update_phone(message: Message, state: FSMContext):
     if not raw_phone.isdigit() or len(raw_phone) != 10:
         await message.answer(text='''
             Неверный формат номера телефона. Пожалуйста, введите 10 цифр номера, без +7 или 8 в начале''',
-                             reply_markup=kb.can_update)
+                             reply_markup=kb.can_update, protect_content=True)
         return
 
     new_phone = f"+7 ({raw_phone[:3]}) {raw_phone[3:6]}-{raw_phone[6:8]}-{raw_phone[8:]}"
 
     await state.update_data(new_phone=new_phone)
     await message.answer(text=f'Отлично! Новый телефон: {new_phone}!\nТеперь введите ваше новое имя:',
-                         reply_markup=kb.can_update)
+                         reply_markup=kb.can_update, protect_content=True)
     await state.set_state(UpdateRegistrationState.UpdateName)
 
 
@@ -279,11 +282,12 @@ async def update_name(message: Message, state: FSMContext):
 
     if not new_name.isalpha():
         await message.answer(text='Имя должно содержать только буквы. Пожалуйста, введите ваше имя еще раз:',
-                             reply_markup=kb.can_update)
+                             reply_markup=kb.can_update, protect_content=True)
         return
 
     await state.update_data(new_name=new_name)
-    await message.answer(text=f'Отлично! Новое имя: {new_name}!\nВведите новую фамилию:', reply_markup=kb.can_update)
+    await message.answer(text=f'Отлично! Новое имя: {new_name}!\nВведите новую фамилию:', reply_markup=kb.can_update,
+                         protect_content=True)
     await state.set_state(UpdateRegistrationState.UpdateLastName)
 
 
@@ -293,12 +297,12 @@ async def update_last_name(message: Message, state: FSMContext):
 
     if not new_last_name.isalpha():
         await message.answer(text='Фамилия должна содержать только буквы. Пожалуйста, введите вашу фамилию еще раз:',
-                             reply_markup=kb.can_update)
+                             reply_markup=kb.can_update, protect_content=True)
         return
 
     await state.update_data(new_last_name=new_last_name)
     await message.answer(text=f'Отлично! Новая фамилия: {new_last_name}!\nВберите новую специализацию:',
-                         reply_markup=kb.tool2)
+                         reply_markup=kb.tool2, protect_content=True)
     await state.set_state(UpdateRegistrationState.UpdateChoiceSpecialisation)
 
 
@@ -322,14 +326,14 @@ async def update_process_specialisation(callback_query: CallbackQuery, state: FS
 
     await callback_query.message.edit_text(
         text=f"Вы выбрали направление: {new_specialisation_student}. \nТеперь выберите нового преподавателя или преподавателей:",
-        reply_markup=reply_markup
+        reply_markup=reply_markup, protect_content=True
     )
     await state.set_state(UpdateRegistrationState.UpdateIDTeacher)
 
 
 @router.callback_query(F.data.startswith('up_name'))
 async def update_parts_name(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer(text="Введите ваше новое имя:", reply_markup=kb.can_update)
+    await callback.message.answer(text="Введите ваше новое имя:", reply_markup=kb.can_update, protect_content=True)
     await state.set_state(UpdateParts.UpdatePartsName)
 
 
@@ -340,7 +344,7 @@ async def process_new_name(message: Message, state: FSMContext):
 
     if not parts_name.isalpha():
         await message.answer(text='Имя должно содержать только буквы. Пожалуйста, введите ваше имя еще раз:',
-                             reply_markup=kb.can_update)
+                             reply_markup=kb.can_update, protect_content=True)
         return
 
     async with async_session() as session:
@@ -351,13 +355,13 @@ async def process_new_name(message: Message, state: FSMContext):
         )
         await session.commit()
 
-    await message.answer(text='Отлично! Ваше имя было успешно изменено.', reply_markup=kb.menu1)
+    await message.answer(text='Отлично! Ваше имя было успешно изменено.', reply_markup=kb.menu1, protect_content=True)
     await state.clear()
 
 
 @router.callback_query(F.data.startswith('up_last_name'))
 async def update_parts_last_name(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer(text="Введите вашу новую фамилию:", reply_markup=kb.can_update)
+    await callback.message.answer(text="Введите вашу новую фамилию:", reply_markup=kb.can_update, protect_content=True)
     await state.set_state(UpdateParts.UpdatePartsLastName)
 
 
@@ -368,7 +372,7 @@ async def process_new_last_name(message: Message, state: FSMContext):
 
     if not parts_last_name.isalpha():
         await message.answer(text='Фамилия должна содержать только буквы. Пожалуйста, введите вашу фамилию еще раз:',
-                             reply_markup=kb.can_update)
+                             reply_markup=kb.can_update, protect_content=True)
         return
 
     async with async_session() as session:
@@ -379,14 +383,15 @@ async def process_new_last_name(message: Message, state: FSMContext):
         )
         await session.commit()
 
-    await message.answer(text='Отлично! Ваша фамилия была успешно изменена.', reply_markup=kb.menu1)
+    await message.answer(text='Отлично! Ваша фамилия была успешно изменена.', reply_markup=kb.menu1,
+                         protect_content=True)
     await state.clear()
 
 
 @router.callback_query(F.data.startswith('up_phone'))
 async def update_parts_phone(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(text="Введите новый номер телефона (без +7 или 8 в начале):",
-                                  reply_markup=kb.can_update)
+                                  reply_markup=kb.can_update, protect_content=True)
     await state.set_state(UpdateParts.UpdatePartsPhone)
 
 
@@ -398,7 +403,7 @@ async def process_new_phone(message: Message, state: FSMContext):
     if not raw_phone.isdigit() or len(raw_phone) != 10:
         await message.answer(text='''
                 Неверный формат номера телефона. Пожалуйста, введите 10 цифр номера, без +7 или 8 в начале''',
-                             reply_markup=kb.can_update)
+                             reply_markup=kb.can_update, protect_content=True)
         return
 
     parts_phone = f"+7 ({raw_phone[:3]}) {raw_phone[3:6]}-{raw_phone[6:8]}-{raw_phone[8:]}"
@@ -411,13 +416,13 @@ async def process_new_phone(message: Message, state: FSMContext):
         )
         await session.commit()
 
-    await message.answer(text='Отлично! Номер телефона успешно изменен.', reply_markup=kb.menu1)
+    await message.answer(text='Отлично! Номер телефона успешно изменен.', reply_markup=kb.menu1, protect_content=True)
     await state.clear()
 
 
 @router.callback_query(F.data.startswith('up_specialization_and_teachers'))
 async def change_parts_inline_keyboard(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer(text='Выберите новую специализацию:', reply_markup=kb.tool3)
+    await callback.message.answer(text='Выберите новую специализацию:', reply_markup=kb.tool3, protect_content=True)
     await state.set_state(UpdateParts.UpdatePartsChoiceSpecialisation)
 
 
@@ -441,6 +446,6 @@ async def update_parts_process_specialisation(callback_query: CallbackQuery, sta
 
     await callback_query.message.edit_text(
         text=f"Вы выбрали направление: {new_parts_specialisation_student}. \nТеперь выберите нового преподавателя или преподавателей:",
-        reply_markup=reply_markup
+        reply_markup=reply_markup, protect_content=True
     )
     await state.set_state(UpdateParts.UpdatePartsIDTeacher)

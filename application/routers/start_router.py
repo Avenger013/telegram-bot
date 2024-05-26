@@ -27,7 +27,7 @@ async def smd_start(message: Message):
         "❔ Дополнительную информацию и ответы на часто задаваемы вопросы вы найдете с помощью команды - /info\n\n"
         "При использовании бота вы соглашаетесь на получение от нас сообщений, рассылок и рекламы."
     )
-    await message.answer(text=welcome_text, parse_mode='HTML', reply_markup=kb.menu)
+    await message.answer(text=welcome_text, parse_mode='HTML', reply_markup=kb.menu, protect_content=True)
 
 
 @router.callback_query(F.data.startswith('cancellation'))
@@ -50,4 +50,4 @@ async def call_cancellation(callback: CallbackQuery, state: FSMContext):
         "❔ Дополнительную информацию и ответы на часто задаваемые вопросы вы найдете с помощью команды - /info\n\n"
         "При использовании бота вы соглашаетесь на получение от нас сообщений, рассылок и рекламы."
     )
-    await callback.message.edit_text(text=welcome_text, parse_mode='HTML', reply_markup=kb.back3)
+    await callback.message.edit_text(text=welcome_text, parse_mode='HTML', reply_markup=kb.back3, protect_content=True)

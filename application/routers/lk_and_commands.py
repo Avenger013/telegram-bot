@@ -47,7 +47,8 @@ async def personal_area(message: Message):
             response += f"📌Количество отметок за текущую неделю: {check_in_count}\n"
             response += "\nСистему получения баллов и то, на что их можно обменять, вы найдете в разделе 🎁Монетизация"
 
-            await message.answer(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area)
+            await message.answer(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area,
+                                 protect_content=True)
             await message.answer(text='', reply_markup=kb.menu)
         else:
             await message.answer(
@@ -87,12 +88,13 @@ async def call_back(callback: CallbackQuery):
             response += f"📌Количество отметок за текущую неделю: {check_in_count}\n"
             response += "\nСистему получения баллов и то, на что их можно обменять, вы найдете в разделе 🎁Монетизация"
 
-            await callback.message.edit_text(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area)
+            await callback.message.edit_text(response, parse_mode='HTML', reply_markup=kb.inline_keyboard_personal_area,
+                                             protect_content=True)
             await callback.message.answer(text='', reply_markup=kb.menu)
         else:
             await callback.message.edit_text(
                 text=f'{callback.from_user.first_name}, это ваш первый вход. \nПожалуйста, пройдите быструю регистрацию.',
-                reply_markup=kb.registration
+                reply_markup=kb.registration, protect_content=True
             )
 
 
@@ -117,7 +119,7 @@ async def top_students(message: Message):
     else:
         response_message = "Учеников пока нет."
 
-    await message.answer(response_message, reply_markup=kb.back3)
+    await message.answer(response_message, reply_markup=kb.back3, protect_content=True)
 
 
 @router.callback_query(F.data.startswith('viewing'))
@@ -131,7 +133,7 @@ async def call_top_students(callback: CallbackQuery):
     else:
         response_message = "Учеников пока нет."
 
-    await callback.message.edit_text(response_message, reply_markup=kb.back2)
+    await callback.message.edit_text(response_message, reply_markup=kb.back2, protect_content=True)
 
 
 @router.message(F.text == '📈 Лидер месяца')
@@ -151,7 +153,7 @@ async def leader_of_the_month(message: Message):
     else:
         response_message = "<b>В этом месяце еще нет лидера.</b>"
 
-    await message.answer(response_message, reply_markup=kb.back3, parse_mode='HTML')
+    await message.answer(response_message, reply_markup=kb.back3, parse_mode='HTML', protect_content=True)
 
 
 @router.callback_query(F.data.startswith('lead'))
@@ -170,7 +172,7 @@ async def call_leader_of_the_month(callback: CallbackQuery):
     else:
         response_message = "<b>В этом месяце еще нет лидера.</b>"
 
-    await callback.message.edit_text(response_message, reply_markup=kb.back2, parse_mode='HTML')
+    await callback.message.edit_text(response_message, reply_markup=kb.back2, parse_mode='HTML', protect_content=True)
 
 
 @router.message(F.text == '🎁 Монетизация')
@@ -190,7 +192,7 @@ async def monetization_list(message: Message):
         points_word = get_points_word(gift.number_of_points)
         response_text += f"        {gift.present} - {gift.number_of_points} {points_word}\n"
 
-    await message.answer(text=response_text, reply_markup=kb.back4, parse_mode='HTML')
+    await message.answer(text=response_text, reply_markup=kb.back4, parse_mode='HTML', protect_content=True)
 
 
 async def call_monetization_list_info(callback: CallbackQuery, reply_markup):
@@ -208,7 +210,8 @@ async def call_monetization_list_info(callback: CallbackQuery, reply_markup):
         points_word = get_points_word(gift.number_of_points)
         response_text += f"        {gift.present} - {gift.number_of_points} {points_word}\n"
 
-    await callback.message.edit_text(text=response_text, parse_mode='HTML', reply_markup=reply_markup)
+    await callback.message.edit_text(text=response_text, parse_mode='HTML', reply_markup=reply_markup,
+                                     protect_content=True)
 
 
 @router.callback_query(F.data.startswith('comeback'))
@@ -237,7 +240,8 @@ async def exchange_points(callback: CallbackQuery, state: FSMContext):
         "├ Можно выбрать 1 или несколько позиций сразу:"
     )
 
-    await callback.message.edit_text(text=response_text, reply_markup=new_markup, parse_mode='HTML')
+    await callback.message.edit_text(text=response_text, reply_markup=new_markup, parse_mode='HTML',
+                                     protect_content=True)
     await state.set_state(Gifts.Gift)
 
 
@@ -289,9 +293,9 @@ async def selecting_gifts(callback: CallbackQuery, state: FSMContext):
         if student:
             total_points_needed, gifts_descriptions = await calculate_total_points(selected_gift_ids)
             if student.point < total_points_needed:
-                await callback.message.edit_text("Извините, у вас недостаточно баллов.")
+                await callback.message.edit_text(text="Извините, у вас недостаточно баллов.", protect_content=True)
                 await callback.message.answer(text="Хотите выбрать подарки заново или завершить выбор?",
-                                              reply_markup=kb.choice_keyboard)
+                                              reply_markup=kb.choice_keyboard, protect_content=True)
             else:
                 student.point -= total_points_needed
                 await update_student_points(session, student.id, student.point)
@@ -302,7 +306,8 @@ async def selecting_gifts(callback: CallbackQuery, state: FSMContext):
                     gifts_text = "Баллы были успешно списаны, вы получаете:\n" + "; ".join(gifts_descriptions) + "."
 
                 await callback.message.edit_text(
-                    text=gifts_text + "\n\nОбратитесь к администратору для получения.", reply_markup=kb.back3
+                    text=gifts_text + "\n\nОбратитесь к администратору для получения.", reply_markup=kb.back3,
+                    protect_content=True
                 )
         else:
             await callback.message.answer("Профиль студента не найден.")
@@ -330,7 +335,7 @@ async def support_service(message: Message):
     for info in support_info:
         response_text += f"{info.instruction_support} 🤝🏼.\n"
 
-    await message.answer(text=response_text, reply_markup=kb.back3, parse_mode='HTML')
+    await message.answer(text=response_text, reply_markup=kb.back3, parse_mode='HTML', protect_content=True)
 
 
 @router.callback_query(F.data.startswith('supp'))
@@ -341,7 +346,7 @@ async def call_support_service(callback: CallbackQuery):
     for info in support_info:
         response_text += f"{info.instruction_support} 🤝🏼.\n"
 
-    await callback.message.edit_text(text=response_text, reply_markup=kb.back2, parse_mode='HTML')
+    await callback.message.edit_text(text=response_text, reply_markup=kb.back2, parse_mode='HTML', protect_content=True)
 
 
 @router.message(F.text == '❔ О боте')
@@ -353,7 +358,7 @@ async def information_bot(message: Message):
     for info in bot_info:
         response_text += f"{info.instruction}\n\n"
 
-    await message.answer(text=response_text, reply_markup=kb.back3, parse_mode='HTML')
+    await message.answer(text=response_text, reply_markup=kb.back3, parse_mode='HTML', protect_content=True)
 
 
 @router.callback_query(F.data.startswith('the_info'))
@@ -364,7 +369,7 @@ async def call_information_bot(callback: CallbackQuery):
     for info in bot_info:
         response_text += f"{info.instruction}\n\n"
 
-    await callback.message.edit_text(text=response_text, reply_markup=kb.back2, parse_mode='HTML')
+    await callback.message.edit_text(text=response_text, reply_markup=kb.back2, parse_mode='HTML', protect_content=True)
 
 
 @router.callback_query(F.data.startswith('receiving'))
@@ -383,7 +388,8 @@ async def getting_points(callback: CallbackQuery, state: FSMContext):
         "├ Можно выбрать 1 или несколько позиций сразу:"
     )
 
-    await callback.message.edit_text(text=response_text, reply_markup=new_markup, parse_mode='HTML')
+    await callback.message.edit_text(text=response_text, reply_markup=new_markup, parse_mode='HTML',
+                                     protect_content=True)
     await state.set_state(Systems.System)
 
 
@@ -441,8 +447,8 @@ async def selecting_money(callback: CallbackQuery, state: FSMContext):
             await session.refresh(student)
             await callback.message.answer(
                 text=f"✅ Баллы успешно начислены!\nВаше текущее количество баллов: <b>{student.point}</b>",
-                parse_mode='HTML', reply_markup=kb.menu)
+                parse_mode='HTML', reply_markup=kb.menu, protect_content=True)
         else:
-            await callback.message.answer("Профиль студента не найден.")
+            await callback.message.answer(text="Профиль студента не найден.", protect_content=True)
 
     await state.clear()

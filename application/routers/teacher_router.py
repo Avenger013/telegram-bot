@@ -24,7 +24,7 @@ file_hash_map = {}
 
 @router.message(Command('teacher'))
 async def register_students(message: Message, state: FSMContext):
-    await message.answer(text='Введите пароль:', reply_markup=ReplyKeyboardRemove())
+    await message.answer(text='Введите пароль:', reply_markup=ReplyKeyboardRemove(), protect_content=True)
     await state.set_state(PasswordCheck.EnterPassword)
 
 
@@ -36,7 +36,7 @@ async def check_password(message: Message, state: FSMContext):
 
     if input_text in commands:
         await state.clear()
-        await message.answer("Обнаружена команда. Пожалуйста, введите команду ещё раз.")
+        await message.answer(text="Обнаружена команда. Пожалуйста, введите команду ещё раз.", protect_content=True)
         return
 
     input_password = input_text.strip()
@@ -44,12 +44,13 @@ async def check_password(message: Message, state: FSMContext):
 
     if teacher:
         teacher_full_name = f'{teacher.name} {teacher.last_name}'
-        await message.answer(f'Пароль верен! Здравствуйте, {teacher_full_name}!')
+        await message.answer(text=f'Пароль верен! Здравствуйте, {teacher_full_name}!', protect_content=True)
         keyboard = await students_choice(teacher.id)
-        await message.answer(text='Выберите ученика, чтобы посмотреть его домашние задания:', reply_markup=keyboard)
+        await message.answer(text='Выберите ученика, чтобы посмотреть его домашние задания:', reply_markup=keyboard,
+                             protect_content=True)
         await state.clear()
     else:
-        await message.answer('🙈 Извините, пароль не верен, попробуйте еще раз.')
+        await message.answer(text='🙈 Извините, пароль не верен, попробуйте еще раз.', protect_content=True)
 
 
 async def students_choice(teacher_id: int) -> InlineKeyboardMarkup:
@@ -119,10 +120,11 @@ async def student_files(callback: CallbackQuery, bot: Bot):
             ])
             file_input = FSInputFile(path=filename)
 
-            await bot.send_document(chat_id=callback.from_user.id, document=file_input, reply_markup=keyboard)
+            await bot.send_document(chat_id=callback.from_user.id, document=file_input, reply_markup=keyboard,
+                                    protect_content=True)
 
     if not files_found:
-        await callback.message.answer("У этого ученика нет отправленных домашних заданий.")
+        await callback.message.answer(text="У этого ученика нет отправленных домашних заданий.", protect_content=True)
 
 
 @router.callback_query(F.data.startswith('accept_'))
@@ -216,17 +218,17 @@ async def feedback_homework(callback: CallbackQuery, state: FSMContext):
     async with async_session() as session:
         homework = await get_homework_by_file_hash(session, file_hash)
         if not homework:
-            await callback.message.answer("Домашнее задание не найдено.")
+            await callback.message.answer(text="Домашнее задание не найдено.", protect_content=True)
             return
 
         student = await get_student_by_id(session, homework.student_id)
         if not student:
-            await callback.message.answer("Студент не найден.")
+            await callback.message.answer(text="Студент не найден.", protect_content=True)
             return
 
         teacher = await get_teacher_by_id(session, homework.teacher_id)
         if not teacher:
-            await callback.message.answer("Преподаватель не найден.")
+            await callback.message.answer(text="Преподаватель не найден.", protect_content=True)
             return
 
         teacher_full_name = f'{teacher.name} {teacher.last_name}'
@@ -241,7 +243,8 @@ async def feedback_homework(callback: CallbackQuery, state: FSMContext):
             ]
         )
 
-        await callback.message.answer(text="Введите текст обратной связи для студента:", reply_markup=cancel_button)
+        await callback.message.answer(text="Введите текст обратной связи для студента:", reply_markup=cancel_button,
+                                      protect_content=True)
 
     await callback.answer()
 
@@ -261,13 +264,13 @@ async def receive_feedback_text(message: Message, state: FSMContext, bot: Bot):
 
     try:
         await bot.send_message(chat_id=student_tg_id, text=text)
-        await message.answer(text="Обратная связь отправлена студенту.")
+        await message.answer(text="Обратная связь отправлена студенту.", protect_content=True)
 
         async with async_session() as session:
             await update_feedback_sent(session, homework_id)
 
     except Exception as e:
-        await message.answer(text=f"Не удалось отправить сообщение студенту: {e}")
+        await message.answer(text=f"Не удалось отправить сообщение студенту: {e}", protect_content=True)
 
     await state.clear()
 
@@ -275,13 +278,14 @@ async def receive_feedback_text(message: Message, state: FSMContext, bot: Bot):
 @router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 FeedbackState.WaitingForText)
 async def wrong_type_for_text(message: Message):
-    await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидался текст). Попробуйте еще раз.")
+    await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидался текст). Попробуйте еще раз.",
+                         protect_content=True)
 
 
 @router.callback_query(F.data.startswith('car_feedback'), FeedbackState.WaitingForText)
 async def checked_homework(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    await callback.message.edit_text(text="Отправка обратной связи отменена.", reply_markup=None)
+    await callback.message.edit_text(text="Отправка обратной связи отменена.", reply_markup=None, protect_content=True)
 
 
 @router.callback_query(F.data.startswith('car'))
