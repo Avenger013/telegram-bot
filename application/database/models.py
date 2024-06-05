@@ -90,7 +90,6 @@ class Password(Base):
     __tablename__: str = 'passwords'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    password_teacher: Mapped[str | None] = mapped_column()
     password_newsletter: Mapped[str | None] = mapped_column()
 
 
@@ -129,6 +128,7 @@ class TasksForTheWeek(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     quest: Mapped[str | None] = mapped_column()
+    attachment: Mapped[str | None] = mapped_column()
 
 
 class DailyCheckIn(Base):

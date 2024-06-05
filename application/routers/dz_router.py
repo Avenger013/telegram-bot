@@ -5,7 +5,7 @@ import hashlib
 
 from datetime import datetime
 from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from sqlalchemy import select, and_
@@ -695,12 +695,32 @@ async def confirm_homework_text_2(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith('zd_send'))
-async def submit_homework(callback: CallbackQuery):
-    bot_week_quest = await get_tasks_for_the_week()
+async def submit_homework(callback: CallbackQuery, bot: Bot):
+    tg_id = callback.from_user.id
+
+    async with async_session() as session:
+        student = await get_student(session, tg_id)
+        if not student:
+            await callback.message.answer(text="Ваш аккаунт не найден в системе.", protect_content=True)
+            return
+
+    bot_week_quest, task_number = await get_tasks_for_the_week(student.date_of_registration)
     response_text = "📋 <b>Задание на текущую неделю:</b>\n\n"
 
     if bot_week_quest:
-        response_text += f"{bot_week_quest.quest}\n\n"
+        response_text += f"Задание №{task_number}: {bot_week_quest.quest}\n\n"
+        # if bot_week_quest.attachment:
+        #     file_path = os.path.join("media", "tasks", bot_week_quest.attachment)
+        #     if os.path.exists(file_path):
+        #         try:
+        #             file_input = FSInputFile(file_path)
+        #             await bot.send_document(chat_id=tg_id, document=file_input, caption=response_text,
+        #                                     parse_mode='HTML')
+        #         except Exception as e:
+        #             await callback.message.answer(text=f"Ошибка при отправке файла: {e}", protect_content=True)
+        #         return
+        #     else:
+        #         response_text += "Ошибка: Прикрепленный файл не найден."
     else:
         response_text += "Задание на неделю еще не выставлено."
 
@@ -711,14 +731,15 @@ async def submit_homework(callback: CallbackQuery):
 async def check_in_homework(callback: CallbackQuery):
     tg_id = callback.from_user.id
     today = datetime.now().date()
-    start_of_year = datetime(today.year, month=1, day=1).date()
-    current_week = (today - start_of_year).days // 7
 
     async with async_session() as session:
         student = await get_student(session, tg_id)
         if not student:
             await callback.message.answer(text="Ваш аккаунт не найден в системе.", protect_content=True)
             return
+
+        date_of_registration = student.date_of_registration.date()
+        current_week = (today - date_of_registration).days // 7
 
         daily_check_in = await session.execute(
             select(DailyCheckIn)
@@ -741,7 +762,7 @@ async def check_in_homework(callback: CallbackQuery):
         )
         last_check_in = last_check_in.scalars().first()
 
-        last_week = (last_check_in.date - start_of_year).days // 7 if last_check_in else None
+        last_week = (last_check_in.date - date_of_registration).days // 7 if last_check_in else None
         if last_week is not None and last_week != current_week:
             last_check_in.check_in_count = 0
 
