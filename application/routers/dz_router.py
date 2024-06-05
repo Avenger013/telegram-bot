@@ -5,7 +5,7 @@ import hashlib
 
 from datetime import datetime
 from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery, FSInputFile
+from aiogram.types import Message, CallbackQuery, FSInputFile, InputMediaPhoto
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from sqlalchemy import select, and_
@@ -694,6 +694,21 @@ async def confirm_homework_text_2(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
 
+async def send_attachments(bot, tg_id, attachments):
+    photos = []
+    attachment_list = attachments.split(',')
+    for attachment in attachment_list:
+        file_path = f'application/media/tasks/{attachment.strip()}'
+        if os.path.exists(file_path):
+            file_input = FSInputFile(path=file_path)
+            if file_path.endswith('.jpg'):
+                photos.append(InputMediaPhoto(media=file_input))
+            elif file_path.endswith('.mp4'):
+                await bot.send_video(chat_id=tg_id, video=file_input, protect_content=True)
+    if photos:
+        await bot.send_media_group(chat_id=tg_id, media=photos, protect_content=True)
+
+
 @router.callback_query(F.data.startswith('zd_send'))
 async def submit_homework(callback: CallbackQuery, bot: Bot):
     tg_id = callback.from_user.id
@@ -709,18 +724,8 @@ async def submit_homework(callback: CallbackQuery, bot: Bot):
 
     if bot_week_quest:
         response_text += f"Задание №{task_number}: {bot_week_quest.quest}\n\n"
-        # if bot_week_quest.attachment:
-        #     file_path = os.path.join("media", "tasks", bot_week_quest.attachment)
-        #     if os.path.exists(file_path):
-        #         try:
-        #             file_input = FSInputFile(file_path)
-        #             await bot.send_document(chat_id=tg_id, document=file_input, caption=response_text,
-        #                                     parse_mode='HTML')
-        #         except Exception as e:
-        #             await callback.message.answer(text=f"Ошибка при отправке файла: {e}", protect_content=True)
-        #         return
-        #     else:
-        #         response_text += "Ошибка: Прикрепленный файл не найден."
+        if bot_week_quest and bot_week_quest.attachment:
+            await send_attachments(bot, tg_id, bot_week_quest.attachment)
     else:
         response_text += "Задание на неделю еще не выставлено."
 
