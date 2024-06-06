@@ -7,7 +7,7 @@ from datetime import datetime
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
+from sqlalchemy import select, func, and_, or_
 from aiogram.exceptions import TelegramBadRequest
 
 from application.states import HomeworkState2
@@ -64,16 +64,63 @@ async def generate_hash_2(file_path):
     return hashlib.md5(filename.encode()).hexdigest()
 
 
+# async def check_video_submission_limit(student_id, file_type='video_2'):
+#     today = datetime.utcnow()
+#     start_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+#
+#     async with async_session() as session:
+#         count = await session.scalar(
+#             select(func.count(Homework.id)).where(
+#                 and_(
+#                     Homework.student_id == student_id,
+#                     Homework.file_type == file_type,
+#                     Homework.submission_time >= start_of_month
+#                 )
+#             )
+#         )
+#         return count < 2
+
+
+async def check_video_submission_limit(student_id):
+    today = datetime.utcnow()
+    start_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    async with async_session() as session:
+        count = await session.scalar(
+            select(func.count(Homework.id)).where(
+                and_(
+                    Homework.student_id == student_id,
+                    Homework.submission_time >= start_of_month,
+                    or_(
+                        Homework.file_type == 'video_2',
+                        Homework.file_type == 'links_2'
+                    )
+                )
+            )
+        )
+        return count < 2
+
+
 @router.message(F.video, HomeworkState2.WaitingForVideo2)
 async def receive_homework_video_2(message: Message, state: FSMContext):
     tg_id = message.from_user.id
 
     async with async_session() as session:
-        student = await session.scalar(select(Student).where(Student.tg_id == tg_id))
-        if not student:
-            await message.answer(text="Студент не найден в базе данных.", protect_content=True)
+        try:
+            student = await session.scalar(select(Student).where(Student.tg_id == tg_id))
+            if not student:
+                await message.answer(text="Студент не найден в базе данных.", protect_content=True)
+                return
+            student_id = student.id
+
+            if not await check_video_submission_limit(student_id):
+                await message.answer(
+                    text="Вы уже отправили видео два раза в этом месяце. Пожалуйста, попробуйте в следующем месяце.",
+                    protect_content=True)
+                return
+        except Exception as e:
+            await message.answer(text=f"Произошла ошибка при доступе к базе данных: {str(e)}", protect_content=True)
             return
-        student_id = student.id
 
     data = await state.get_data()
     teacher_id = data.get('teacher_id')
@@ -172,11 +219,21 @@ async def receive_homework_text_2(message: Message, state: FSMContext):
     tg_id = message.from_user.id
 
     async with async_session() as session:
-        student = await session.scalar(select(Student).where(Student.tg_id == tg_id))
-        if not student:
-            await message.answer(text="Студент не найден в базе данных.", protect_content=True)
+        try:
+            student = await session.scalar(select(Student).where(Student.tg_id == tg_id))
+            if not student:
+                await message.answer(text="Студент не найден в базе данных.", protect_content=True)
+                return
+            student_id = student.id
+
+            if not await check_video_submission_limit(student_id):
+                await message.answer(
+                    text="Вы уже отправили ссылку два раза в этом месяце. Пожалуйста, попробуйте в следующем месяце.",
+                    protect_content=True)
+                return
+        except Exception as e:
+            await message.answer(text=f"Произошла ошибка при доступе к базе данных: {str(e)}", protect_content=True)
             return
-        student_id = student.id
 
     data = await state.get_data()
     teacher_id = data.get('teacher_id')
