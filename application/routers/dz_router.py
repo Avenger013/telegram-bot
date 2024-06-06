@@ -5,15 +5,15 @@ import hashlib
 
 from datetime import datetime
 from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery, FSInputFile, InputMediaPhoto
+from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select, and_
+from sqlalchemy import select
 from aiogram.exceptions import TelegramBadRequest
 
-from application.states import HomeworkState, HomeworkState2
-from application.database.models import Student, DailyCheckIn, Homework, PointsHistory, async_session
-from application.database.requests import get_student, get_tasks_for_the_week
+from application.states import HomeworkState
+from application.database.models import Student, Homework, async_session
+from application.database.requests import get_student
 
 import application.keyboard as kb
 
@@ -444,12 +444,12 @@ async def confirm_homework_text(callback: CallbackQuery, state: FSMContext):
             response_message = "✅Домашнее задание (текст) успешно отправлено!"
 
         await callback.message.answer(text=response_message, reply_markup=kb.menu, protect_content=True)
+        await state.clear()
     elif call_data == 'xt_change':
         await callback.message.answer(text="😌Отлично, отправьте домашнее задание ещё раз.",
                                       reply_markup=kb.tree_can_send, protect_content=True)
 
     await callback.answer()
-    await state.clear()
 
 
 @router.message(F.voice, HomeworkState.WaitingForVoice)
@@ -525,284 +525,6 @@ async def confirm_homework_voice(callback: CallbackQuery, state: FSMContext, bot
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith('vid_send'))
-async def call_submitting_homework_2(callback: CallbackQuery, state: FSMContext):
-    tg_id = callback.from_user.id
-    await callback.message.edit_text(text='Выберите преподавателя, которому вы хотите отправить домашнее задание:',
-                                     reply_markup=await kb.choice_teacher(tg_id), protect_content=True)
-    await state.set_state(HomeworkState2.ChoiceTeacher2)
-
-
-@router.callback_query(F.data.startswith('2_canceled'))
-async def call_submitting_homework_2(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
-    tg_id = callback.from_user.id
-    await callback.message.edit_text(text='Выберите преподавателя, которому вы хотите отправить домашнее задание:',
-                                     reply_markup=await kb.choice_teacher(tg_id), protect_content=True)
-    await state.set_state(HomeworkState2.ChoiceTeacher2)
-
-
-@router.callback_query(F.data.startswith('choice_'), HomeworkState2.ChoiceTeacher2)
-async def teacher_selected_for_homework_2(callback: CallbackQuery, state: FSMContext):
-    teacher_id = callback.data.split('_')[1]
-    await state.update_data(teacher_id=teacher_id)
-    await callback.message.edit_text(text='В каком виде вы хотите отправить видео?', reply_markup=kb.dz_type_2,
-                                     protect_content=True)
-    await state.set_state(HomeworkState2.ChoosingDZType2)
-
-
-@router.callback_query(F.data.startswith('vvv'), HomeworkState2.ChoosingDZType2)
-async def dz_type_video_2(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text(text='😁Отлично, теперь пришлите видео вашего домашнего задания!',
-                                     reply_markup=kb.tree_can_send, protect_content=True)
-    await state.set_state(HomeworkState2.WaitingForVideo2)
-
-
-@router.callback_query(F.data.startswith('lll'), HomeworkState2.ChoosingDZType2)
-async def dz_type_links_2(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text(
-        text='😁Отлично, теперь пришлите ссылку, по которой можно будет ознакомиться с вашим видео!',
-        reply_markup=kb.tree_can_send, protect_content=True)
-    await state.set_state(HomeworkState2.WaitingForLinks2)
-
-
-@router.message(F.video, HomeworkState2.WaitingForVideo2)
-async def receive_homework_video_2(message: Message, state: FSMContext):
-    tg_id = message.from_user.id
-
-    async with async_session() as session:
-        student = await session.scalar(select(Student).where(Student.tg_id == tg_id))
-        if not student:
-            await message.answer(text="Студент не найден в базе данных.", protect_content=True)
-            return
-        student_id = student.id
-
-    data = await state.get_data()
-    teacher_id = data.get('teacher_id')
-
-    video_id = message.video.file_id
-
-    await state.update_data(video_id=video_id, student_id=student_id, teacher_id=teacher_id)
-    await message.answer(text="🧐Всё верно? Окончательно отправить?", reply_markup=kb.confirmation_video_2,
-                         protect_content=True)
-
-
-@router.callback_query(F.data.in_(['iv_2_confirm', 'oed_2_change']), HomeworkState2.WaitingForVideo2)
-async def confirm_homework_video_2(callback: CallbackQuery, state: FSMContext, bot: Bot):
-    call_data = callback.data
-
-    if call_data == 'iv_2_confirm':
-        data = await state.get_data()
-        video_id = data['video_id']
-        student_id = data['student_id']
-        teacher_id = data['teacher_id']
-
-        async with async_session() as session:
-            student = await session.scalar(select(Student).where(Student.id == student_id))
-            if not student:
-                await callback.message.answer(text="Произошла ошибка при поиске данных студента.", protect_content=True)
-                return
-
-        full_name = f'{student.name} {student.last_name}'
-
-        try:
-            file = await bot.get_file(video_id)
-            file_path = file.file_path
-
-            directory = "application/media/video"
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-
-            timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
-            filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_video.mp4"
-
-            await bot.download_file(file_path, filename)
-            await callback.message.answer(text="✅Видео успешно отправлено!", reply_markup=kb.menu, protect_content=True)
-            await state.clear()
-        except TelegramBadRequest as e:
-            if "file is too big" in str(e):
-                text = (
-                    "<b>✉️Ошибка!</b>\n\n"
-                    "😔Извините, ваше видео слишком много весит (максимум 50 МБ)!\n"
-                    "├ Попробуйте начать заново, выбрав отправку в виде ссылки.\n"
-                    "├ Или отправьте другое видео, меньшего размера."
-                )
-                await callback.message.edit_text(text=text, reply_markup=kb.inline_keyboard_error_video,
-                                                 protect_content=True)
-            else:
-                await callback.message.answer(text="😔Произошла ошибка при отправке видео.", reply_markup=kb.menu1,
-                                              protect_content=True)
-    elif call_data == 'oed_2_change':
-        await callback.message.answer(text="😌Отлично, отправьте свое домашнее задание ещё раз.",
-                                      reply_markup=kb.tree_can_send, protect_content=True)
-
-    await callback.answer()
-
-
-@router.message(F.text, HomeworkState2.WaitingForLinks2)
-async def receive_homework_text_2(message: Message, state: FSMContext):
-    tg_id = message.from_user.id
-
-    async with async_session() as session:
-        student = await session.scalar(select(Student).where(Student.tg_id == tg_id))
-        if not student:
-            await message.answer(text="Студент не найден в базе данных.", protect_content=True)
-            return
-        student_id = student.id
-
-    data = await state.get_data()
-    teacher_id = data.get('teacher_id')
-
-    await state.update_data(text=message.text, student_id=student_id, teacher_id=teacher_id)
-    await message.answer(text="🧐Всё верно? Окончательно отправить?", reply_markup=kb.confirmation_text_2,
-                         protect_content=True)
-
-
-@router.callback_query(F.data.in_(['et_2_confirm', 'tx_2_change']), HomeworkState2.WaitingForLinks2)
-async def confirm_homework_text_2(callback: CallbackQuery, state: FSMContext):
-    call_data = callback.data
-    data = await state.get_data()
-
-    if call_data == 'et_2_confirm':
-        text = data.get('text')
-        student_id = data.get('student_id')
-        teacher_id = data.get('teacher_id')
-
-        async with async_session() as session:
-            student = await session.scalar(select(Student).where(Student.id == student_id))
-            if not student:
-                await callback.message.answer(text="Произошла ошибка при поиске данных студента.", protect_content=True)
-                return
-
-        full_name = f'{student.name} {student.last_name}'
-        timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
-        links = find_links(text)
-
-        if links:
-            directory_links = "application/media/links"
-            filename_links = f"{directory_links}/{teacher_id}_{student_id}_{full_name}_{timestamp}_links.html"
-            await save_homework_with_links(directory_links, filename_links, links)
-            response_message = "✅Домашнее задание (ссылка) успешно отправлено!"
-        else:
-            response_message = "❎Вы отправили текст, а нужно ссылку!"
-        await callback.message.answer(text=response_message, reply_markup=kb.menu)
-    elif call_data == 'tx_2_change':
-        await callback.message.answer(text="😌Отлично, отправьте домашнее задание ещё раз.",
-                                      reply_markup=kb.tree_can_send, protect_content=True)
-
-    await callback.answer()
-    await state.clear()
-
-
-async def send_attachments(bot, tg_id, attachments):
-    photos = []
-    attachment_list = attachments.split(',')
-    for attachment in attachment_list:
-        file_path = f'application/media/tasks/{attachment.strip()}'
-        if os.path.exists(file_path):
-            file_input = FSInputFile(path=file_path)
-            if file_path.endswith('.jpg'):
-                photos.append(InputMediaPhoto(media=file_input))
-            elif file_path.endswith('.mp4'):
-                await bot.send_video(chat_id=tg_id, video=file_input, protect_content=True)
-    if photos:
-        await bot.send_media_group(chat_id=tg_id, media=photos, protect_content=True)
-
-
-@router.callback_query(F.data.startswith('zd_send'))
-async def submit_homework(callback: CallbackQuery, bot: Bot):
-    tg_id = callback.from_user.id
-
-    async with async_session() as session:
-        student = await get_student(session, tg_id)
-        if not student:
-            await callback.message.answer(text="Ваш аккаунт не найден в системе.", protect_content=True)
-            return
-
-    bot_week_quest, task_number = await get_tasks_for_the_week(student.date_of_registration)
-    response_text = "📋 <b>Задание на текущую неделю:</b>\n\n"
-
-    if bot_week_quest:
-        response_text += f"Задание №{task_number}: {bot_week_quest.quest}\n\n"
-        if bot_week_quest and bot_week_quest.attachment:
-            await send_attachments(bot, tg_id, bot_week_quest.attachment)
-    else:
-        response_text += "Задание на неделю еще не выставлено."
-
-    await callback.message.answer(text=response_text, reply_markup=kb.back5, parse_mode='HTML', protect_content=True)
-
-
-@router.callback_query(F.data.startswith('check_in'))
-async def check_in_homework(callback: CallbackQuery):
-    tg_id = callback.from_user.id
-    today = datetime.now().date()
-
-    async with async_session() as session:
-        student = await get_student(session, tg_id)
-        if not student:
-            await callback.message.answer(text="Ваш аккаунт не найден в системе.", protect_content=True)
-            return
-
-        date_of_registration = student.date_of_registration.date()
-        current_week = (today - date_of_registration).days // 7
-
-        daily_check_in = await session.execute(
-            select(DailyCheckIn)
-            .where(and_(DailyCheckIn.student_id == student.id, DailyCheckIn.date == today))
-        )
-        daily_check_in = daily_check_in.scalars().first()
-
-        if daily_check_in:
-            daily_check_in_text = (
-                "Вы уже отметились сегодня, не забудьте отметиться завтра!"
-                f"Ваше текущее количество отметок: {daily_check_in.check_in_count}"
-            )
-            await callback.message.edit_text(text=daily_check_in_text, reply_markup=kb.back3, protect_content=True)
-            return
-
-        last_check_in = await session.execute(
-            select(DailyCheckIn)
-            .where(DailyCheckIn.student_id == student.id)
-            .order_by(DailyCheckIn.date.desc())
-        )
-        last_check_in = last_check_in.scalars().first()
-
-        last_week = (last_check_in.date - date_of_registration).days // 7 if last_check_in else None
-        if last_week is not None and last_week != current_week:
-            last_check_in.check_in_count = 0
-
-        if last_check_in and last_check_in.date < today:
-            last_check_in.check_in_count += 1
-            last_check_in.date = today
-
-            if last_check_in.check_in_count >= 7:
-                points_to_add = 1
-                student.point = (student.point or 0) + points_to_add
-                last_check_in.check_in_count = 0
-
-                new_points_history = PointsHistory(student_id=student.id, points_added=points_to_add,
-                                                   date_added=datetime.now())
-                session.add(new_points_history)
-
-                last_check_in_text = (
-                    "Поздравляем! Вы набрали 7 отметок и получили <b>+1 балл</b>.\n"
-                    "Количество баллов можно посмотреть в <b>личном кабинете!</b>"
-                )
-                await callback.message.edit_text(text=last_check_in_text, parse_mode='HTML', reply_markup=kb.back3,
-                                                 protect_content=True)
-            else:
-                await callback.message.edit_text(
-                    text="Отметка успешно учтена!", reply_markup=kb.back3, protect_content=True)
-
-            await session.commit()
-        else:
-            new_check_in = DailyCheckIn(student_id=student.id, date=today, check_in_count=1)
-            session.add(new_check_in)
-            await session.commit()
-            await callback.message.edit_text(text="Отметка успешно учтена! Это ваша первая отметка.",
-                                             reply_markup=kb.back3, protect_content=True)
-
-
 @router.message(F.video | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
                 HomeworkState.WaitingForPhoto)
 async def wrong_homework_type(message: Message):
@@ -829,18 +551,4 @@ async def wrong_type_for_text_and_links(message: Message):
                 HomeworkState.WaitingForVoice)
 async def wrong_type_for_voice(message: Message):
     await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидалось голосовое). Попробуйте еще раз.",
-                         reply_markup=kb.tree_can_send, protect_content=True)
-
-
-@router.message(F.photo | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
-                HomeworkState2.WaitingForVideo2)
-async def wrong_type_for_video_2(message: Message):
-    await message.answer(text="🥺Вы отправили не тот тип сообщения (ожидалось видео). Попробуйте еще раз.",
-                         reply_markup=kb.tree_can_send, protect_content=True)
-
-
-@router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
-                HomeworkState2.WaitingForLinks2)
-async def wrong_type_for_links_2(message: Message):
-    await message.answer(text="🥺Вы отправили не тот тип сообщения (ожидалась ссылка). Попробуйте еще раз.",
                          reply_markup=kb.tree_can_send, protect_content=True)
