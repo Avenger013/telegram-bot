@@ -113,11 +113,26 @@ async def student_files(callback: CallbackQuery, bot: Bot):
         for filename in files:
             files_found = True
             file_hash = await generate_hash(filename)
-            keyboard = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="Принять", callback_data=f'accept_{file_hash}'),
-                 InlineKeyboardButton(text="Отклонить", callback_data=f'decline_{file_hash}')],
-                [InlineKeyboardButton(text="Обратная связь", callback_data=f'feedback_{file_hash}')]
-            ])
+
+            if filename.endswith('_video_2.mp4'):
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    # [InlineKeyboardButton(text="Принять", callback_data=f'eptacc_{file_hash}'),
+                    #  InlineKeyboardButton(text="Отклонить", callback_data=f'linedec_{file_hash}')],
+                    # [InlineKeyboardButton(text="Обратная связь", callback_data=f'backfeed_{file_hash}')]
+                ])
+            elif filename.endswith('_links_2.html'):
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    # [InlineKeyboardButton(text="Принять", callback_data=f'accept_{file_hash}'),
+                    #  InlineKeyboardButton(text="Отклонить", callback_data=f'decline_{file_hash}')],
+                    # [InlineKeyboardButton(text="Обратная связь", callback_data=f'feedback_{file_hash}')]
+                ])
+            else:
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="Принять", callback_data=f'accept_{file_hash}'),
+                     InlineKeyboardButton(text="Отклонить", callback_data=f'decline_{file_hash}')],
+                    [InlineKeyboardButton(text="Обратная связь", callback_data=f'feedback_{file_hash}')]
+                ])
+
             file_input = FSInputFile(path=filename)
 
             await bot.send_document(chat_id=callback.from_user.id, document=file_input, reply_markup=keyboard,
