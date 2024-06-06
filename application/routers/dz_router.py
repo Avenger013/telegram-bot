@@ -729,7 +729,7 @@ async def submit_homework(callback: CallbackQuery, bot: Bot):
     else:
         response_text += "Задание на неделю еще не выставлено."
 
-    await callback.message.edit_text(text=response_text, reply_markup=kb.back5, parse_mode='HTML', protect_content=True)
+    await callback.message.answer(text=response_text, reply_markup=kb.back5, parse_mode='HTML', protect_content=True)
 
 
 @router.callback_query(F.data.startswith('check_in'))

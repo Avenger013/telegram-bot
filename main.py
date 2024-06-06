@@ -9,6 +9,7 @@ from config import TOKEN
 from application.routers import router as main_router
 from application.utils.commands import set_commands
 from application.middleware import ResetStateMiddleware
+from application.scheduler import start_scheduler
 
 
 async def main():
@@ -20,6 +21,7 @@ async def main():
     dp.include_router(main_router)
 
     await set_commands(bot)
+    start_scheduler()
     await dp.start_polling(bot)
 
 
