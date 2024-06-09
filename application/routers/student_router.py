@@ -17,8 +17,10 @@ router = Router(name=__name__)
 
 @router.callback_query(F.data.startswith('registration'))
 async def register_students(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer(text='Введите ваш номер телефона (без +7 или 8 в начале):', reply_markup=kb.can,
-                                  protect_content=True)
+    await callback.message.answer(
+        text='Введите ваш номер телефона (без +7 или 8 в начале):',
+        reply_markup=kb.can, protect_content=True
+    )
     await callback.answer('')
     await state.set_state(RegistrationState.EnterPhone)
 
@@ -46,16 +48,19 @@ async def enter_last_name(message: Message, state: FSMContext):
     raw_phone = message.text.strip()
 
     if not raw_phone.isdigit() or len(raw_phone) != 10:
-        await message.answer(text='''
-            Неверный формат номера телефона. Пожалуйста, введите 10 цифр номера, без +7 или 8 в начале''',
-                             reply_markup=kb.can, protect_content=True)
+        await message.answer(
+            text="Неверный формат номера телефона. Пожалуйста, введите 10 цифр номера, без +7 или 8 в начале",
+            reply_markup=kb.can, protect_content=True
+        )
         return
 
     formatted_phone = f"+7 ({raw_phone[:3]}) {raw_phone[3:6]}-{raw_phone[6:8]}-{raw_phone[8:]}"
 
     await state.update_data(phone=formatted_phone)
-    await message.answer(text=f'Телефон {formatted_phone} сохранен! \nТеперь введите ваше имя:', reply_markup=kb.can,
-                         protect_content=True)
+    await message.answer(
+        text=f'Телефон {formatted_phone} сохранен! \nТеперь введите ваше имя:',
+        reply_markup=kb.can, protect_content=True
+    )
     await state.set_state(RegistrationState.EnterName)
 
 
@@ -69,8 +74,10 @@ async def enter_name(message: Message, state: FSMContext):
         return
 
     await state.update_data(name=name)
-    await message.answer(text=f'Отлично, {name}! \nТеперь введите вашу фамилию:', reply_markup=kb.can,
-                         protect_content=True)
+    await message.answer(
+        text=f'Отлично, {name}! \nТеперь введите вашу фамилию:',
+        reply_markup=kb.can, protect_content=True
+    )
     await state.set_state(RegistrationState.EnterLastName)
 
 
@@ -263,9 +270,10 @@ async def update_phone(message: Message, state: FSMContext):
     raw_phone = message.text.strip()
 
     if not raw_phone.isdigit() or len(raw_phone) != 10:
-        await message.answer(text='''
-            Неверный формат номера телефона. Пожалуйста, введите 10 цифр номера, без +7 или 8 в начале''',
-                             reply_markup=kb.can_update, protect_content=True)
+        await message.answer(
+            text="Неверный формат номера телефона. Пожалуйста, введите 10 цифр номера, без +7 или 8 в начале",
+            reply_markup=kb.can_update, protect_content=True
+        )
         return
 
     new_phone = f"+7 ({raw_phone[:3]}) {raw_phone[3:6]}-{raw_phone[6:8]}-{raw_phone[8:]}"
