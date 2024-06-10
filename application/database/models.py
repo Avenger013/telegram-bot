@@ -34,6 +34,7 @@ class Student(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id = mapped_column(BigInteger)
     date_of_registration = mapped_column(DateTime, default=datetime.now())
+    # date_of_registration = mapped_column(DateTime)
     name: Mapped[str | None] = mapped_column()
     last_name: Mapped[str | None] = mapped_column()
     phone: Mapped[str | None] = mapped_column()

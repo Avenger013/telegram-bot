@@ -5,6 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from sqlalchemy import select, update, delete
+from datetime import datetime
 
 from application.states import RegistrationState, UpdateRegistrationState, UpdateParts
 from application.database.models import Student, async_session, StudentTeacher
@@ -195,13 +196,17 @@ async def teacher_selected_students(callback: CallbackQuery, state: FSMContext):
                         last_name=new_last_name,
                         phone=new_phone,
                         specialisation_student=new_specialisation_student
+                        # date_of_registration=datetime.utcnow()
                     )
                 )
                 message_text = 'Информация успешно обновлена!'
         else:
             student = Student(tg_id=tg_id, name=data.get('name'), last_name=data.get('last_name'),
-                              phone=data.get('phone'),
-                              specialisation_student=data.get('specialisation_student'), point=0)
+                              phone=data.get('phone'), specialisation_student=data.get('specialisation_student'),
+                              point=0)
+            # student = Student(tg_id=tg_id, date_of_registration=datetime.utcnow(), name=data.get('name'),
+            #                   last_name=data.get('last_name'), phone=data.get('phone'),
+            #                   specialisation_student=data.get('specialisation_student'), point=0)
             session.add(student)
             await session.flush()
             message_text = 'Регистрация успешно завершена, Спасибо!'
