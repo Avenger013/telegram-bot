@@ -170,7 +170,7 @@ async def confirm_homework_video_2(callback: CallbackQuery, state: FSMContext, b
                     "├ Или отправьте другое видео, меньшего размера."
                 )
                 await callback.message.edit_text(text=text, reply_markup=kb.inline_keyboard_error_video,
-                                                 protect_content=True)
+                                                 parse_mode='HTML', protect_content=True)
             else:
                 await callback.message.answer(text="😔Произошла ошибка при отправке видео.", reply_markup=kb.menu1,
                                               protect_content=True)

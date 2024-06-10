@@ -3,6 +3,7 @@
 # ваше_приложение/models.py
 
 from django.db import models
+from datetime import datetime
 
 
 class Teacher(models.Model):
@@ -10,6 +11,7 @@ class Teacher(models.Model):
     name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     specialisation = models.CharField(max_length=255)
+    password_teacher = models.CharField(max_length=255)
 
     class Meta:
         managed = False
@@ -22,9 +24,12 @@ class Teacher(models.Model):
 class Student(models.Model):
     id = models.IntegerField(primary_key=True)
     tg_id = models.BigIntegerField()
+    date_of_registration = models.DateTimeField(default=datetime.now)
     name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
     phone = models.CharField(max_length=255, null=True, blank=True)
+    specialisation_student = models.CharField(max_length=255, null=True, blank=True)
+    point = models.IntegerField(null=True, blank=True)
 
     teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True,
                                 related_name='students', db_column='teacher_id')
