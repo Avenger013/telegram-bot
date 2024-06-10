@@ -163,3 +163,4 @@ cython_debug/
 
 application/media/
 information.txt
+lines.py
